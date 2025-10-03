@@ -169,18 +169,33 @@ class WorkflowBuilder extends Component {
         }
         this.state.selectedNode = nodeId;
     }
-    get selectedNodeConfig() {
-        if (!this.state.selectedNode) return null;
-        return this.state.nodeConfigs[this.state.selectedNode];
+
+    clearCanvas() {
+        if (!confirm("Clear the entire canvas?")) return;
+
+        const canvas = this.canvasRef.el;
+        Array.from(canvas.querySelectorAll('.workflow-node')).forEach(n => n.remove());
+
+        this.state.workflowNodes = [];
+        this.state.nodeConfigs = {};
+        this.state.nodeIdCounter = 0;
+        this.state.selectedNode = null;
+        this.state.showInstructions = true;
     }
 
-    updateNodeConfig(key, value) {
-        if (this.state.selectedNode) {
-            const config = this.state.nodeConfigs[this.state.selectedNode];
-            if (config) {
-                config.config[key] = value;
-            }
-        }
+    exportWorkflow() {
+        const workflowData = {
+            nodes: this.state.workflowNodes,
+            configs: this.state.nodeConfigs
+        };
+        console.log('Export:', workflowData);
+        alert('Workflow exported to console!');
+    }
+
+    loadSample() {
+        this.clearCanvas();
+        // Add sample nodes here
+        console.log('Sample workflow loaded');
     }
 
 

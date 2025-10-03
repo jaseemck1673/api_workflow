@@ -94,6 +94,11 @@
                 <div class="canvas-header">
                     <div class="canvas-title">🎨 API Workflow Canvas</div>
                     <div class="canvas-subtitle">Drag nodes here and connect them to create your workflow</div>
+                    <div class="workflow-controls">
+                        <button class="control-btn" t-on-click="clearCanvas">🗑️ Clear</button>
+                        <button class="control-btn" t-on-click="loadSample">📋 Sample</button>
+                        <button class="control-btn" t-on-click="exportWorkflow">💾 Export</button>
+                    </div>
                 </div>
 
                 <div class="canvas"
