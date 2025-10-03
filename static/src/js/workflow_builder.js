@@ -169,6 +169,19 @@ class WorkflowBuilder extends Component {
         }
         this.state.selectedNode = nodeId;
     }
+    get selectedNodeConfig() {
+        if (!this.state.selectedNode) return null;
+        return this.state.nodeConfigs[this.state.selectedNode];
+    }
+
+    updateNodeConfig(key, value) {
+        if (this.state.selectedNode) {
+            const config = this.state.nodeConfigs[this.state.selectedNode];
+            if (config) {
+                config.config[key] = value;
+            }
+        }
+    }
 
 
 

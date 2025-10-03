@@ -190,3 +190,50 @@
     display: block;
 }
 
+.config-section {
+    background: #f8f9fa;
+    border-radius: 6px;
+    padding: 16px;
+    margin-bottom: 16px;
+    border: 1px solid #e9ecef;
+}
+
+.section-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    color: #495057;
+}
+
+.config-label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    color: #495057;
+    font-size: 0.85rem;
+}
+
+.config-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    margin-bottom: 12px;
+    font-size: 0.85rem;
+    background: white;
+    color: #2c3e50;
+}
+
+.config-input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.help-text {
+    font-size: 0.75rem;
+    color: #6c757d;
+    margin-bottom: 8px;
+    line-height: 1.4;
+}

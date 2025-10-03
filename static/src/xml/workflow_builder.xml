@@ -137,12 +137,53 @@
                 </div>
 
                 <div class="config-content">
-                    <t t-if="!state.selectedNode">
-                        <div class="empty-config">
-                            <div class="empty-config-icon">🎯</div>
-                            <h3>Select a Node</h3>
-                            <p>Click on any node in your workflow to configure its settings and parameters here.</p>
-                        </div>
+                    <t t-if="state.selectedNode">
+                        <t t-set="nodeConfig" t-value="selectedNodeConfig"/>
+                        <t t-if="nodeConfig">
+                            <!-- Start Node Config -->
+                            <t t-if="nodeConfig.type === 'start'">
+                                <div class="config-section">
+                                    <div class="section-title">
+                                        <span class="section-icon">▶️</span>
+                                        Start Configuration
+                                    </div>
+                                    <div class="help-text">This is the entry point of your workflow.</div>
+                                </div>
+                            </t>
+
+                            <!-- Endpoint Node Config -->
+                            <t t-if="nodeConfig.type === 'endpoint'">
+                                <div class="config-section">
+                                    <div class="section-title">
+                                        <span class="section-icon">🌐</span>
+                                        Endpoint Details
+                                    </div>
+                                    <label class="config-label">Base API URL</label>
+                                    <input type="text"
+                                           class="config-input"
+                                           placeholder="https://api.example.com"
+                                           t-att-value="nodeConfig.config.baseUrl || ''"
+                                           t-on-input="(ev) => this.updateNodeConfig('baseUrl', ev.target.value)"/>
+                                    <div class="help-text">The common base URL for all API calls.</div>
+                                </div>
+                            </t>
+
+                            <!-- GET Node Config -->
+                            <t t-if="nodeConfig.type === 'get'">
+                                <div class="config-section">
+                                    <div class="section-title">
+                                        <span class="section-icon">🌐</span>
+                                        Endpoint Details
+                                    </div>
+                                    <label class="config-label">API URL Path</label>
+                                    <input type="text"
+                                           class="config-input"
+                                           placeholder="/api/users"
+                                           t-att-value="nodeConfig.config.url || ''"
+                                           t-on-input="(ev) => this.updateNodeConfig('url', ev.target.value)"/>
+                                </div>
+                            </t>
+                        </t>
                     </t>
                 </div>
             </div>
