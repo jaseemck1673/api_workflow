@@ -50,7 +50,7 @@ class WorkflowBuilder extends Component {
         const y = ev.clientY - rect.top - 40;
 
         this.createWorkflowNode(nodeType, x, y);
-          this.state.showInstructions = false;
+         this.state.showInstructions = false;
 
     }
     createWorkflowNode(type, x, y) {
@@ -64,12 +64,16 @@ class WorkflowBuilder extends Component {
         nodeElement.dataset.type = type;
 
         nodeElement.innerHTML = `
+             <button class="delete-node" title="Delete node">×</button>
+            <div class="connection-point input"></div>
+            <div class="connection-point output"></div>
             <div class="node-header">
                 <div class="node-icon">${this.getNodeIcon(type)}</div>
                 <div class="node-title">${this.getNodeTitle(type)}</div>
             </div>
             <div class="node-status">Click to configure</div>
         `;
+
 
         this.canvasRef.el.appendChild(nodeElement);
         this.makeNodeDraggable(nodeElement);
