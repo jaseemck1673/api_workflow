@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <t t-name="api_workflow_builder.WorkflowBuilder" owl="1">
+        <div class="workflow-builder-container">
+            <!-- Left Panel - Node Library -->
+            <div class="node-library">
+                <div class="library-header">
+                    <div class="library-title">🧩 Workflow Nodes</div>
+                    <div class="library-subtitle">Drag to canvas to build your API workflow</div>
+                </div>
+
+                <div class="node-category">
+                    <div class="category-title">
+                        <span class="category-icon">🚀</span>
+                        Flow Control
+                    </div>
+
+                    <div class="node-template" draggable="true" data-type="start">
+                        <div class="node-template-header">
+                            <div class="node-template-icon">▶️</div>
+                            <div class="node-template-name">Start</div>
+                        </div>
+                        <div class="node-template-desc">Begin your workflow</div>
+                    </div>
+
+                    <div class="node-template" draggable="true" data-type="end">
+                        <div class="node-template-header">
+                            <div class="node-template-icon">🏁</div>
+                            <div class="node-template-name">End</div>
+                        </div>
+                        <div class="node-template-desc">Complete workflow</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Middle Panel - Canvas -->
+            <div class="canvas-container">
+                <div class="canvas-header">
+                    <div class="canvas-title">🎨 API Workflow Canvas</div>
+                    <div class="canvas-subtitle">Drag nodes here and connect them to create your workflow</div>
+                </div>
+
+                <div class="canvas"
+                     t-ref="canvas"
+                     t-on-drop="onDrop"
+                     t-on-dragover="onDragOver"
+                     t-on-dragleave="onDragLeave"
+                     t-on-click="deselectAllNodes">
+
+                    <div class="instructions" t-if="state.showInstructions">
+                        <h3>🚀 Build Your API Workflow</h3>
+                        <p><strong>Step 1:</strong> Drag "Start" node here</p>
+                        <p><strong>Step 2:</strong> Add "API Endpoint" node</p>
+                        <p><strong>Step 3:</strong> Choose HTTP method (GET, POST, etc.)</p>
+                        <p><strong>Step 4:</strong> Click nodes to configure in right panel</p>
+                        <p><strong>Step 5:</strong> Connect nodes and test!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel - Configuration -->
+            <div class="config-panel">
+                <div class="config-header">
+                    <div class="config-title">⚙️ Node Settings</div>
+                    <div class="config-subtitle">Select a node to configure its parameters</div>
+                </div>
+
+                <div class="config-content">
+                    <t t-if="!state.selectedNode">
+                        <div class="empty-config">
+                            <div class="empty-config-icon">🎯</div>
+                            <h3>Select a Node</h3>
+                            <p>Click on any node in your workflow to configure its settings and parameters here.</p>
+                        </div>
+                    </t>
+                </div>
+            </div>
+        </div>
+    </t>
+</odoo>
