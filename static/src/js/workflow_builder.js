@@ -114,6 +114,58 @@ class WorkflowBuilder extends Component {
         return titles[type] || 'Node';
     }
 
+    makeNodeDraggable(node) {
+        let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+
+        const dragMouseDown = (e) => {
+            e.preventDefault();
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+            document.onmouseup = closeDragElement;
+            document.onmousemove = elementDrag;
+            node.classList.add('dragging');
+        };
+
+        const elementDrag = (e) => {
+            e.preventDefault();
+            pos1 = pos3 - e.clientX;
+            pos2 = pos4 - e.clientY;
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+
+            node.style.top = (node.offsetTop - pos2) + "px";
+            node.style.left = (node.offsetLeft - pos1) + "px";
+        };
+
+        const closeDragElement = () => {
+            document.onmouseup = null;
+            document.onmousemove = null;
+            node.classList.remove('dragging');
+        };
+
+        node.onmousedown = dragMouseDown;
+    }
+    // attach node event stage 2
+
+    attachNodeEvents(nodeElement, nodeId) {
+        nodeElement.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.selectNode(nodeId);
+        });
+    }
+    // Select node stage 2
+    selectNode(nodeId) {
+        document.querySelectorAll('.workflow-node').forEach(node =>
+            node.classList.remove('selected')
+        );
+
+        const nodeElement = document.getElementById(nodeId);
+        if (nodeElement) {
+            nodeElement.classList.add('selected');
+        }
+        this.state.selectedNode = nodeId;
+    }
+
 
 
     deselectAllNodes() {

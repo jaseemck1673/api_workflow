@@ -14,6 +14,61 @@
                     <div class="category-title">
                         <span class="category-icon">🚀</span>
                         Flow Control
+                        <div class="node-category">
+                            <div class="category-title">
+                                <span class="category-icon">🔌</span>
+                                API Setup
+                            </div>
+                            <div class="node-template" draggable="true" data-type="endpoint">
+                                <div class="node-template-header">
+                                    <div class="node-template-icon">🌐</div>
+                                    <div class="node-template-name">API Endpoint</div>
+                                </div>
+                                <div class="node-template-desc">Set API URL and type</div>
+                            </div>
+                            <div class="node-template" draggable="true" data-type="auth">
+                                <div class="node-template-header">
+                                    <div class="node-template-icon">🔐</div>
+                                    <div class="node-template-name">Authentication</div>
+                                </div>
+                                <div class="node-template-desc">API security setup</div>
+                            </div>
+                        </div>
+
+                        <div class="node-category">
+                            <div class="category-title">
+                                <span class="category-icon">📡</span>
+                                HTTP Methods
+                            </div>
+                            <div class="node-template" draggable="true" data-type="get">
+                                <div class="node-template-header">
+                                    <div class="node-template-icon">📥</div>
+                                    <div class="node-template-name">GET</div>
+                                </div>
+                                <div class="node-template-desc">Retrieve data</div>
+                            </div>
+                            <div class="node-template" draggable="true" data-type="post">
+                                <div class="node-template-header">
+                                    <div class="node-template-icon">📤</div>
+                                    <div class="node-template-name">POST</div>
+                                </div>
+                                <div class="node-template-desc">Send new data</div>
+                            </div>
+                            <div class="node-template" draggable="true" data-type="put">
+                                <div class="node-template-header">
+                                    <div class="node-template-icon">✏️</div>
+                                    <div class="node-template-name">PUT</div>
+                                </div>
+                                <div class="node-template-desc">Update data</div>
+                            </div>
+                            <div class="node-template" draggable="true" data-type="delete">
+                                <div class="node-template-header">
+                                    <div class="node-template-icon">🗑️</div>
+                                    <div class="node-template-name">DELETE</div>
+                                </div>
+                                <div class="node-template-desc">Remove data</div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="node-template" draggable="true" data-type="start">
@@ -50,11 +105,26 @@
 
                     <div class="instructions" t-if="state.showInstructions">
                         <h3>🚀 Build Your API Workflow</h3>
-                        <p><strong>Step 1:</strong> Drag "Start" node here</p>
-                        <p><strong>Step 2:</strong> Add "API Endpoint" node</p>
-                        <p><strong>Step 3:</strong> Choose HTTP method (GET, POST, etc.)</p>
-                        <p><strong>Step 4:</strong> Click nodes to configure in right panel</p>
-                        <p><strong>Step 5:</strong> Connect nodes and test!</p>
+                        <p>
+                            <strong>Step 1:</strong>
+                            Drag "Start" node here
+                        </p>
+                        <p>
+                            <strong>Step 2:</strong>
+                            Add "API Endpoint" node
+                        </p>
+                        <p>
+                            <strong>Step 3:</strong>
+                            Choose HTTP method (GET, POST, etc.)
+                        </p>
+                        <p>
+                            <strong>Step 4:</strong>
+                            Click nodes to configure in right panel
+                        </p>
+                        <p>
+                            <strong>Step 5:</strong>
+                            Connect nodes and test!
+                        </p>
                     </div>
                 </div>
             </div>
