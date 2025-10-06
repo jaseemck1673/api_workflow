@@ -97,7 +97,13 @@
                     <div class="workflow-controls">
                         <button class="control-btn" t-on-click="clearCanvas">🗑️ Clear</button>
                         <button class="control-btn" t-on-click="loadSample">📋 Sample</button>
+                        <button class="control-btn" t-on-click="testWorkflow">🧪 Test</button>
                         <button class="control-btn" t-on-click="exportWorkflow">💾 Export</button>
+                        <label class="control-btn" style="cursor: pointer; margin: 0;">
+                            📁 Import
+                            <input type="file" accept=".json" style="display: none;" t-on-change="importWorkflow"/>
+                        </label>
+                        <button class="control-btn" t-on-click="saveWorkflow">💾 Save</button>
                     </div>
                 </div>
 

@@ -7,5 +7,6 @@ class APIWorkflow(models.Model):
 
     name = fields.Char(string='Workflow Name', required=True)
     description = fields.Text(string='Description')
+    workflow_data = fields.Text(string='Workflow Data')
     active = fields.Boolean(string='Active', default=True)
     created_date = fields.Datetime(string='Created Date', default=fields.Datetime.now)
