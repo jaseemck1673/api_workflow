@@ -453,3 +453,380 @@
 .config-panel::-webkit-scrollbar-thumb:hover {
     background: #667eea;
 }
+/* Add these new styles to your existing CSS */
+
+/* ========== VISUAL FEEDBACK STYLES ========== */
+.connection-feedback {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    z-index: 1000;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.connection-feedback.show {
+    transform: translateX(0);
+}
+
+.connection-feedback-success {
+    background: #10b981;
+    border-left: 4px solid #059669;
+}
+
+.connection-feedback-error {
+    background: #ef4444;
+    border-left: 4px solid #dc2626;
+}
+
+/* Node hover states */
+.workflow-node.node-hover {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.3);
+}
+
+.workflow-node.connection-hover {
+    border-color: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.4);
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.4); }
+    50% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.2); }
+}
+
+/* Active connection highlighting */
+.connection-active {
+    stroke: #f59e0b !important;
+    stroke-width: 4 !important;
+    filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.6));
+    animation: glow 1s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+    from { stroke-width: 4; }
+    to { stroke-width: 5; }
+}
+
+/* ========== VALIDATION STYLES ========== */
+.validation-panel {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: #374151;
+    border: 1px solid #4b5563;
+    border-radius: 8px;
+    padding: 16px;
+    max-width: 400px;
+    z-index: 100;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.validation-header {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.validation-status {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.status-valid {
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+}
+
+.status-invalid {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
+
+.status-warning {
+    background: rgba(245, 158, 11, 0.2);
+    color: #f59e0b;
+}
+
+.validation-error {
+    padding: 8px;
+    margin: 6px 0;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    border-left: 3px solid;
+}
+
+.error-error { background: rgba(239, 68, 68, 0.1); border-left-color: #ef4444; }
+.error-warning { background: rgba(245, 158, 11, 0.1); border-left-color: #f59e0b; }
+
+.error-nodes {
+    margin-top: 4px;
+    font-size: 0.8rem;
+    color: #9ca3af;
+}
+
+/* Node validation indicators */
+.node-validation {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid #374151;
+}
+
+.node-valid { background: #10b981; }
+.node-invalid { background: #ef4444; }
+.node-warning { background: #f59e0b; }
+
+/* ========== TEMPLATES & PRESETS ========== */
+.templates-panel {
+    background: #374151;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.template-card {
+    background: #4b5563;
+    border: 1px solid #6b7280;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.template-card:hover {
+    border-color: #667eea;
+    transform: translateY(-2px);
+}
+
+.template-name {
+    font-weight: 600;
+    color: #f3f4f6;
+    margin-bottom: 4px;
+}
+
+.template-desc {
+    font-size: 0.8rem;
+    color: #9ca3af;
+}
+
+/* ========== COLLABORATION STYLES ========== */
+.collaboration-panel {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    max-width: 300px;
+    z-index: 100;
+}
+
+.collaboration-activity {
+    background: #374151;
+    border-left: 4px solid;
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    font-size: 0.8rem;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+.activity-user {
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.activity-message {
+    color: #9ca3af;
+}
+
+.user-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+}
+
+.user-online { background: #10b981; }
+.user-offline { background: #6b7280; }
+
+/* ========== VERSION HISTORY ========== */
+.version-history {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.version-item {
+    background: #4b5563;
+    border: 1px solid #6b7280;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.version-item:hover {
+    border-color: #667eea;
+}
+
+.version-time {
+    font-size: 0.8rem;
+    color: #9ca3af;
+    margin-bottom: 4px;
+}
+
+.version-desc {
+    font-weight: 500;
+    color: #f3f4f6;
+}
+
+/* ========== TEST RESULTS ========== */
+.test-results-panel {
+    background: #374151;
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 16px;
+}
+
+.test-progress {
+    background: #4b5563;
+    border-radius: 4px;
+    height: 6px;
+    margin: 8px 0;
+    overflow: hidden;
+}
+
+.test-progress-bar {
+    height: 100%;
+    background: #667eea;
+    transition: width 0.3s ease;
+}
+
+.test-result-path {
+    background: #4b5563;
+    border-radius: 4px;
+    padding: 8px;
+    margin: 6px 0;
+    border-left: 3px solid;
+}
+
+.path-success { border-left-color: #10b981; }
+.path-failed { border-left-color: #ef4444; }
+.path-skipped { border-left-color: #6b7280; }
+
+/* ========== DOCUMENTATION STYLES ========== */
+.docs-button {
+    position: absolute;
+    top: -6px;
+    left: -6px;
+    width: 18px;
+    height: 18px;
+    background: #6b7280;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: help;
+    font-size: 0.6rem;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 30;
+}
+
+.workflow-node:hover .docs-button {
+    display: flex;
+}
+
+.docs-button:hover {
+    background: #667eea;
+    transform: scale(1.1);
+}
+
+/* ========== ENHANCED CONNECTION STYLES ========== */
+.connection-valid {
+    stroke: #10b981 !important;
+    stroke-width: 3 !important;
+}
+
+.connection-invalid {
+    stroke: #ef4444 !important;
+    stroke-dasharray: 5,5 !important;
+}
+
+.connection-warning {
+    stroke: #f59e0b !important;
+    stroke-width: 2 !important;
+}
+
+/* ========== WORKFLOW STATUS INDICATORS ========== */
+.workflow-status {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-left: 8px;
+}
+
+.status-draft { background: #6b7280; color: white; }
+.status-valid { background: #10b981; color: white; }
+.status-invalid { background: #ef4444; color: white; }
+
+/* ========== RESPONSIVE IMPROVEMENTS ========== */
+@media (max-width: 1200px) {
+    .workflow-builder-container {
+        grid-template-columns: 250px 1fr 350px;
+    }
+}
+
+@media (max-width: 768px) {
+    .workflow-builder-container {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr auto;
+    }
+
+    .node-library, .config-panel {
+        max-height: 200px;
+    }
+}
+
+/* ========== ACCESSIBILITY IMPROVEMENTS ========== */
+.workflow-node:focus {
+    outline: 2px solid #667eea;
+    outline-offset: 2px;
+}
+
+.control-btn:focus {
+    outline: 2px solid #667eea;
+    outline-offset: 1px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .workflow-node {
+        border-width: 2px;
+    }
+
+    .connection-point {
+        border-width: 3px;
+        border-color: #000;
+    }
+}

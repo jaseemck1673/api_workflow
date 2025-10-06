@@ -18,6 +18,9 @@ class WorkflowBuilder extends Component {
             showInstructions: true,
             connections: [],
             tempConnection: null,
+            nodeConfigs: {},
+            selectedNode: null,
+            configUpdateCounter: 0,
         });
 
         onMounted(() => {
@@ -25,7 +28,525 @@ class WorkflowBuilder extends Component {
             this.setupConnections();
         });
     }
+    // =========== oct 6 =================
+    getNodeTemplate(type) {
+        console.log('getNodeTemplate()')
+        const templates = {
+            start: { icon: '▶️', title: 'Start Workflow' },
+            end: { icon: '🏁', title: 'End Workflow' },
+            endpoint: { icon: '🌐', title: 'API Endpoint' },
+            auth: { icon: '🔐', title: 'Authentication' },
+            get: { icon: '📥', title: 'GET Request' },
+            post: { icon: '📤', title: 'POST Request' },
+            put: { icon: '✏️', title: 'PUT Request' },
+            delete: { icon: '🗑️', title: 'DELETE Request' },
+            params: { icon: '❓', title: 'Query Parameters' },
+            body: { icon: '📝', title: 'Request Body' },
+            headers: { icon: '📋', title: 'Custom Headers' }
+        };
+        return templates[type] || templates.start;
+    }
 
+    getConfigurationTemplate(nodeId) {
+        console.log('getConfigurationTemplate')
+        const nodeConfig = this.state.nodeConfigs[nodeId];
+        if (!nodeConfig) return '';
+
+        const type = nodeConfig.type;
+        let html = '';
+
+        // Common configuration templates from script.js
+        const apiFields = `
+            <div class="config-section">
+                <div class="section-title">
+                    <span class="section-icon">🌐</span>
+                    Endpoint Details
+                </div>
+                <label for="url-${nodeId}" class="config-label">API URL Path</label>
+                <input type="text" id="url-${nodeId}" class="config-input"
+                       placeholder="/api/users"
+                       t-on-input="(ev) => this.updateNodeConfig('${nodeId}', 'url', ev.target.value)">
+            </div>
+        `;
+
+        const authFields = `
+            <div class="config-section">
+                <div class="section-title">
+                    <span class="section-icon">🔐</span>
+                    Authentication Configuration
+                </div>
+                <label for="auth-type-${nodeId}" class="config-label">Auth Type</label>
+                <select id="auth-type-${nodeId}" class="config-select"
+                        t-on-change="(ev) => this.updateAuthType('${nodeId}', ev.target.value)">
+                    <option value="none">None</option>
+                    <option value="basic">Basic Auth</option>
+                    <option value="bearer">Bearer Token</option>
+                    <option value="api-key">API Key</option>
+                </select>
+                <div id="auth-fields-${nodeId}" class="auth-fields"></div>
+            </div>
+        `;
+
+        // Add similar templates for other node types as in script.js
+        switch (type) {
+            case 'start':
+                html = this.getStartConfiguration(nodeId);
+                break;
+            case 'end':
+                html = this.getEndConfiguration(nodeId);
+                break;
+            case 'endpoint':
+                html = this.getEndpointConfiguration(nodeId);
+                break;
+            case 'auth':
+                html = this.getAuthConfiguration(nodeId);
+                break;
+            case 'get':
+            case 'post':
+            case 'put':
+            case 'delete':
+                html = this.getHttpMethodConfiguration(nodeId, type);
+                break;
+            case 'params':
+                html = this.getParamsConfiguration(nodeId);
+                break;
+            case 'headers':
+                html = this.getHeadersConfiguration(nodeId);
+                break;
+            case 'body':
+                html = this.getBodyConfiguration(nodeId);
+                break;
+        }
+
+        return html;
+    }
+
+    // Individual configuration methods
+    getStartConfiguration(nodeId) {
+        console.log('getStartConfiguration()')
+        return `
+            <div class="config-section">
+                <div class="section-title">
+                    <span class="section-icon">▶️</span>
+                    Start Configuration
+                </div>
+                <div class="help-text">This is the entry point of your workflow.</div>
+            </div>
+        `;
+    }
+
+    getHttpMethodConfiguration(nodeId, method) {
+        console.log('getHttpMethodConfiguration()')
+        return `
+            <div class="config-section">
+                <div class="section-title">
+                    <span class="section-icon">📡</span>
+                    Request Details
+                </div>
+                <label class="config-label">HTTP Method</label>
+                <div style="font-size: 1.5rem; font-weight: bold; color: #00f2fe; text-align: center; padding: 10px;">
+                    ${method.toUpperCase()}
+                </div>
+                <label for="url-${nodeId}" class="config-label">API URL Path</label>
+                <input type="text" id="url-${nodeId}" class="config-input"
+                       placeholder="/api/users"
+                       t-on-input="(ev) => this.updateNodeConfig('${nodeId}', 'url', ev.target.value)">
+
+                <label for="timeout-${nodeId}" class="config-label">Timeout (ms)</label>
+                <input type="number" id="timeout-${nodeId}" class="config-input"
+                       placeholder="10000"
+                       t-on-input="(ev) => this.updateNodeConfig('${nodeId}', 'timeout', parseInt(ev.target.value))">
+
+                ${(method === 'post' || method === 'put') ? this.getBodyConfiguration(nodeId) : ''}
+
+                <button class="test-button" t-on-click="() => this.runApiTest('${nodeId}')">
+                    ⚡ Run API Test
+                </button>
+
+                <label class="config-label">API Response</label>
+                <div class="response-area" id="response-area-${nodeId}">
+                    No test run yet.
+                </div>
+            </div>
+        `;
+    }
+
+    getEndpointConfiguration(nodeId) {
+        console.log('getEndpointConfiguration()')
+        return `
+            <div class="config-section">
+                <div class="section-title">
+                    <span class="section-icon">🌐</span>
+                    Base API Setup
+                </div>
+                <label for="base-url-${nodeId}" class="config-label">Base API URL</label>
+                <input type="text" id="base-url-${nodeId}" class="config-input"
+                       placeholder="https://api.example.com"
+                       t-on-input="(ev) => this.updateNodeConfig('${nodeId}', 'baseUrl', ev.target.value)">
+            </div>
+            ${this.getAuthConfiguration(nodeId)}
+        `;
+    }
+
+    // Add parameter management methods
+    addParam(nodeId, paramType, key, value) {
+    console.log('addParam()')
+        if (!key || !value) {
+            this.notification.add("Key and Value cannot be empty", { type: 'warning' });
+            return;
+        }
+
+        const nodeConfig = this.state.nodeConfigs[nodeId];
+        if (!nodeConfig.config[paramType]) {
+            nodeConfig.config[paramType] = [];
+        }
+
+        nodeConfig.config[paramType].push({
+            key: key.trim(),
+            value: value.trim()
+        });
+
+        this.updateNodeStatus(nodeId);
+    }
+
+    removeParam(nodeId, paramType, index) {
+        console.log('removeParam')
+        const nodeConfig = this.state.nodeConfigs[nodeId];
+        if (nodeConfig.config[paramType] && nodeConfig.config[paramType].length > index) {
+            nodeConfig.config[paramType].splice(index, 1);
+            this.updateNodeStatus(nodeId);
+        }
+    }
+
+    getParamsConfiguration(nodeId) {
+        console.log('getParamsConfiguration')
+        return `
+            <div class="config-section">
+                <div class="section-title">
+                    <span class="section-icon">❓</span>
+                    Query Parameters
+                </div>
+
+                <div class="param-builder">
+                    <t t-foreach="this.getNodeParams(nodeId)" t-as="param" t-key="param_index">
+                        <div class="param-item">
+                            <span>{ param.key }: { param.value }</span>
+                            <button class="remove-btn"
+                                    t-on-click="() => this.removeParam('${nodeId}', 'params', param_index)">
+                                ×
+                            </button>
+                        </div>
+                    </t>
+                </div>
+
+                <label for="param-key-${nodeId}" class="config-label">Parameter Key</label>
+                <input type="text" id="param-key-${nodeId}" class="config-input" placeholder="key_name">
+
+                <label for="param-value-${nodeId}" class="config-label">Parameter Value</label>
+                <input type="text" id="param-value-${nodeId}" class="config-input" placeholder="value_content">
+
+                <button class="add-btn"
+                        t-on-click="() => this.addParamFromInputs('${nodeId}', 'params')">
+                    + Add Parameter
+                </button>
+            </div>
+        `;
+    }
+
+    addParamFromInputs(nodeId, paramType) {
+        console.log('addParamFromInputs')
+        const keyInput = document.getElementById(`${paramType}-key-${nodeId}`);
+        const valueInput = document.getElementById(`${paramType}-value-${nodeId}`);
+
+       if (keyInput && valueInput && keyInput.value && valueInput.value) {
+            if (!this.state.nodeConfigs[nodeId].config[paramType]) {
+                this.state.nodeConfigs[nodeId].config[paramType] = [];
+            }
+
+            this.state.nodeConfigs[nodeId].config[paramType].push({
+                key: keyInput.value.trim(),
+                value: valueInput.value.trim()
+            });
+
+            keyInput.value = '';
+            valueInput.value = '';
+            this.updateNodeStatus(nodeId);
+        } else {
+            this.notification.add("Key and Value cannot be empty", { type: 'warning' });
+        }
+    }
+
+    // Authentication management
+    updateAuthType(nodeId, authType) {
+        if (this.state.nodeConfigs[nodeId]) {
+            this.state.nodeConfigs[nodeId].config.authType = authType;
+
+            // Clear dependent fields when auth type changes
+            const fieldsToClear = ['username', 'password', 'token', 'apiKey', 'keyLocation'];
+            fieldsToClear.forEach(field => {
+                if (this.state.nodeConfigs[nodeId].config[field]) {
+                    delete this.state.nodeConfigs[nodeId].config[field];
+                }
+            });
+
+            this.updateNodeStatus(nodeId);
+            // Force template update to show/hide auth fields
+            this.state.configUpdateCounter++;
+        }
+    }
+
+    updateAuthFields(nodeId, authType) {
+        console.log('updateAuthFields')
+        // This would update the dynamic auth fields in the UI
+        const nodeConfig = this.state.nodeConfigs[nodeId];
+
+        switch (authType) {
+            case 'basic':
+                // Add username/password fields
+                break;
+            case 'bearer':
+                // Add token field
+                break;
+            case 'api-key':
+                // Add API key and location fields
+                break;
+            case 'none':
+                // Clear auth fields
+                break;
+        }
+    }
+
+    getAuthConfiguration(nodeId) {
+        console.log('getAuthConfiguration')
+        return `
+            <div class="config-section">
+                <div class="section-title">
+                    <span class="section-icon">🔐</span>
+                    Authentication
+                </div>
+
+                <label for="auth-type-${nodeId}" class="config-label">Auth Type</label>
+                <select id="auth-type-${nodeId}" class="config-select"
+                        t-on-change="(ev) => this.updateAuthType('${nodeId}', ev.target.value)">
+                    <option value="none">None</option>
+                    <option value="basic">Basic Auth</option>
+                    <option value="bearer">Bearer Token</option>
+                    <option value="api-key">API Key</option>
+                </select>
+
+                <div class="auth-fields">
+                    <t t-if="this.state.nodeConfigs[nodeId]?.config?.authType === 'basic'">
+                        <label for="username-${nodeId}" class="config-label">Username</label>
+                        <input type="text" id="username-${nodeId}" class="config-input"
+                               t-on-input="(ev) => this.updateNodeConfig('${nodeId}', 'username', ev.target.value)">
+
+                        <label for="password-${nodeId}" class="config-label">Password</label>
+                        <input type="password" id="password-${nodeId}" class="config-input"
+                               t-on-input="(ev) => this.updateNodeConfig('${nodeId}', 'password', ev.target.value)">
+                    </t>
+
+                    <t t-if="this.state.nodeConfigs[nodeId]?.config?.authType === 'bearer'">
+                        <label for="token-${nodeId}" class="config-label">Bearer Token</label>
+                        <input type="text" id="token-${nodeId}" class="config-input"
+                               t-on-input="(ev) => this.updateNodeConfig('${nodeId}', 'token', ev.target.value)">
+                    </t>
+
+                    <t t-if="this.state.nodeConfigs[nodeId]?.config?.authType === 'api-key'">
+                        <label for="api-key-${nodeId}" class="config-label">API Key</label>
+                        <input type="text" id="api-key-${nodeId}" class="config-input"
+                               t-on-input="(ev) => this.updateNodeConfig('${nodeId}', 'apiKey', ev.target.value)">
+
+                        <label for="key-location-${nodeId}" class="config-label">Key Location</label>
+                        <select id="key-location-${nodeId}" class="config-select"
+                                t-on-change="(ev) => this.updateNodeConfig('${nodeId}', 'keyLocation', ev.target.value)">
+                            <option value="header">Header</option>
+                            <option value="query">Query Parameter</option>
+                        </select>
+                    </t>
+                </div>
+            </div>
+        `;
+    }
+
+    getBodyConfiguration(nodeId) {
+        console.log('getBodyConfiguration')
+        return `
+            <div class="config-section">
+                <div class="section-title">
+                    <span class="section-icon">📝</span>
+                    Request Body (JSON)
+                </div>
+
+                <div class="template-buttons">
+                    <button class="template-btn"
+                            t-on-click="() => this.applyBodyTemplate('${nodeId}', 'object')">
+                        { "key": "value" }
+                    </button>
+                    <button class="template-btn"
+                            t-on-click="() => this.applyBodyTemplate('${nodeId}', 'array')">
+                        [ { "item": 1 } ]
+                    </button>
+                </div>
+
+                <label for="request-body-${nodeId}" class="config-label">JSON Payload</label>
+                <textarea id="request-body-${nodeId}" class="config-textarea"
+                          t-on-input="(ev) => this.updateNodeConfig('${nodeId}', 'body', ev.target.value)"
+                          placeholder='{"key": "value"}'></textarea>
+            </div>
+        `;
+    }
+
+    applyBodyTemplate(nodeId, type) {
+        console.log('applyBodyTemplate')
+        const textarea = document.getElementById(`request-body-${nodeId}`);
+        let template = '';
+
+        if (type === 'object') {
+            template = '{\n  "name": "New Item",\n  "status": "pending"\n}';
+        } else if (type === 'array') {
+            template = '[\n  {\n    "id": 1,\n    "value": "initial"\n  }\n]';
+        }
+
+        if (textarea) {
+            textarea.value = template;
+            this.updateNodeConfig(nodeId, 'body', template);
+        }
+    }
+
+    async runApiTest(nodeId) {
+        console.log('runApiTest')
+        const nodeConfig = this.state.nodeConfigs[nodeId];
+        const responseArea = document.getElementById(`response-area-${nodeId}`);
+        const testButton = document.getElementById(`test-btn-${nodeId}`);
+
+        if (!responseArea || !testButton) return;
+
+        // Similar API test logic as in script.js
+        try {
+            testButton.disabled = true;
+            testButton.textContent = 'Running...';
+            responseArea.textContent = 'Request Sent. Waiting for Response...';
+
+            // Build request from workflow configuration
+             setTimeout(() => {
+                const mockResponse = {
+                    status: 200,
+                    statusText: "OK (Mocked)",
+                    requestUrl: nodeConfig.config.url || '/api/test',
+                    data: {
+                        message: "This is a simulated API response.",
+                        method: nodeConfig.type.toUpperCase(),
+                        time: new Date().toISOString(),
+                        config: nodeConfig.config
+                    }
+                };
+
+                responseArea.textContent = JSON.stringify(mockResponse, null, 2);
+                this.notification.add("API test completed successfully!", { type: 'success' });
+            }, 1500);
+
+        } catch (error) {
+            responseArea.textContent = JSON.stringify({ error: error.message }, null, 2);
+            this.notification.add("API test failed", { type: 'danger' });
+        } finally {
+            testButton.disabled = false;
+            testButton.textContent = '⚡ Run API Test';
+        }
+    }
+
+    buildRequestFromWorkflow(nodeId) {
+        console.log('buildRequestFromWorkflow')
+        // Build complete request from connected nodes
+        const nodeConfig = this.state.nodeConfigs[nodeId];
+        const baseNode = Object.values(this.state.nodeConfigs).find(n => n.type === 'endpoint');
+        const authNode = Object.values(this.state.nodeConfigs).find(n => n.type === 'auth');
+
+        // Combine configurations from all relevant nodes
+        return {
+            url: this.buildFullUrl(nodeConfig, baseNode),
+            method: nodeConfig.type.toUpperCase(),
+            headers: this.buildHeaders(authNode),
+            body: nodeConfig.config.body
+        };
+    }
+
+    updateNodeStatus(nodeId) {
+        console.log('updateNodeStatus')
+        const nodeConfig = this.state.nodeConfigs[nodeId];
+        const element = document.getElementById(nodeId);
+        const statusDiv = element ? element.querySelector('.node-status') : null;
+
+        if (!element || !statusDiv) return;
+
+        let isConfigured = false;
+        let statusText = 'Click to configure';
+
+        switch (nodeConfig.type) {
+            case 'start':
+            case 'end':
+                isConfigured = true;
+                statusText = nodeConfig.type === 'start' ? 'Ready' : 'End Point';
+                break;
+            case 'endpoint':
+                isConfigured = nodeConfig.config.baseUrl && nodeConfig.config.baseUrl.length > 0;
+                statusText = isConfigured ? 'Base URL Set' : 'Missing Base URL';
+                break;
+            case 'auth':
+                isConfigured = nodeConfig.config.authType && nodeConfig.config.authType !== 'none';
+                if (nodeConfig.config.authType === 'basic') {
+                    isConfigured = nodeConfig.config.username && nodeConfig.config.password;
+                } else if (nodeConfig.config.authType === 'bearer') {
+                    isConfigured = !!nodeConfig.config.token;
+                } else if (nodeConfig.config.authType === 'api-key') {
+                    isConfigured = !!nodeConfig.config.apiKey;
+                }
+                statusText = isConfigured ? 'Auth Configured' : 'Missing Auth Detail';
+                break;
+            case 'get':
+            case 'put':
+            case 'post':
+            case 'delete':
+                isConfigured = nodeConfig.config.url && nodeConfig.config.url.length > 0;
+                if ((nodeConfig.type === 'post' || nodeConfig.type === 'put') && !nodeConfig.config.body) {
+                    isConfigured = false;
+                }
+                statusText = isConfigured ? 'Ready to Run' : 'Missing URL/Body';
+                break;
+            case 'params':
+                isConfigured = nodeConfig.config.params && nodeConfig.config.params.length > 0;
+                statusText = isConfigured ? `${nodeConfig.config.params.length} Set` : 'No items set';
+                break;
+            case 'headers':
+                isConfigured = nodeConfig.config.headers && nodeConfig.config.headers.length > 0;
+                statusText = isConfigured ? `${nodeConfig.config.headers.length} Set` : 'No items set';
+                break;
+            case 'body':
+                isConfigured = nodeConfig.config.body && nodeConfig.config.body.trim().length > 0;
+                statusText = isConfigured ? 'Body Set' : 'Empty Body';
+                break;
+        }
+
+        statusDiv.textContent = statusText;
+        element.classList.toggle('node-configured', isConfigured);
+        element.classList.toggle('node-error', !isConfigured && nodeConfig.type !== 'start' && nodeConfig.type !== 'end');
+    }
+
+    updateAuthType(nodeId, authType) {
+        console.log('updateAuthType')
+        this.updateNodeConfig('authType', authType);
+
+        // Clear dependent fields when auth type changes
+        const nodeConfig = this.state.nodeConfigs[nodeId];
+        if (nodeConfig) {
+            const fieldsToClear = ['username', 'password', 'token', 'apiKey', 'keyLocation'];
+            fieldsToClear.forEach(field => {
+                if (nodeConfig.config[field]) {
+                    delete nodeConfig.config[field];
+                }
+            });
+        }
+    }
+    // ===============previous functions ===========
     setupDragAndDrop() {
         const templates = document.querySelectorAll('.node-template');
         templates.forEach(template => {
@@ -60,6 +581,7 @@ class WorkflowBuilder extends Component {
     }
 
     createWorkflowNode(type, x, y) {
+        console.log('createWorkflowNode')
         const nodeId = `node-${++this.state.nodeIdCounter}`;
 
         const nodeElement = document.createElement('div');
@@ -90,9 +612,28 @@ class WorkflowBuilder extends Component {
             type: type,
             x: x,
             y: y,
-            config: {}
+            config: this.getDefaultConfig(type)
         };
         this.state.workflowNodes.push(nodeId);
+        this.updateNodeStatus(nodeId);
+    }
+
+     getDefaultConfig(type) {
+        console.log('getDefaultConfig')
+        const defaults = {
+            endpoint: { baseUrl: '', authType: 'none', url: '' },
+            auth: { authType: 'none' },
+            get: { url: '', timeout: 10000 },
+            post: { url: '', timeout: 10000, body: '' },
+            put: { url: '', timeout: 10000, body: '' },
+            delete: { url: '', timeout: 10000 },
+            params: { params: [] },
+            headers: { headers: [] },
+            body: { body: '' },
+            start: {},
+            end: {}
+        };
+        return defaults[type] || {};
     }
 
     getNodeIcon(type) {
@@ -127,7 +668,7 @@ class WorkflowBuilder extends Component {
     let isDragging = false;
     let startX, startY, initialX, initialY;
 
-    const dragMouseDown = (e) => {
+        const dragMouseDown = (e) => {
         if (e.target.classList.contains('connection-point') ||
             e.target.classList.contains('delete-node')) {
             return;
@@ -156,7 +697,7 @@ class WorkflowBuilder extends Component {
         document.body.style.cursor = 'grabbing';
     };
 
-    const elementDrag = (e) => {
+        const elementDrag = (e) => {
         if (!isDragging) return;
 
         e.preventDefault();
@@ -178,7 +719,7 @@ class WorkflowBuilder extends Component {
         });
     };
 
-    const closeDragElement = () => {
+        const closeDragElement = () => {
         if (!isDragging) return;
 
         isDragging = false;
@@ -197,10 +738,10 @@ class WorkflowBuilder extends Component {
         }
     };
 
-    node.addEventListener('mousedown', dragMouseDown);
+        node.addEventListener('mousedown', dragMouseDown);
 
     // Add touch support for mobile devices
-    node.addEventListener('touchstart', (e) => {
+        node.addEventListener('touchstart', (e) => {
         if (e.target.classList.contains('connection-point') ||
             e.target.classList.contains('delete-node')) {
             return;
@@ -222,7 +763,7 @@ class WorkflowBuilder extends Component {
         document.addEventListener('touchend', closeDragElement);
     });
 
-    const touchDrag = (e) => {
+        const touchDrag = (e) => {
         if (!isDragging) return;
 
         e.preventDefault();
@@ -241,7 +782,7 @@ class WorkflowBuilder extends Component {
             this.updateConnections();
         });
     };
-}
+    }
 
 
     attachNodeEvents(nodeElement, nodeId) {
@@ -299,6 +840,7 @@ class WorkflowBuilder extends Component {
     }
 
     selectNode(nodeId) {
+        console.log('selectNode')
         document.querySelectorAll('.workflow-node').forEach(node =>
             node.classList.remove('selected')
         );
@@ -311,6 +853,7 @@ class WorkflowBuilder extends Component {
     }
 
     clearCanvas() {
+        console.log('clearCanvas')
         if (!confirm("Clear the entire canvas?")) return;
 
         const canvas = this.canvasRef.el;
@@ -379,6 +922,7 @@ class WorkflowBuilder extends Component {
     }
 
     finishConnection(ev) {
+        console.log('finishConnection')
         if (!this.state.tempConnection) return;
 
         // Find if we're connecting to another node
@@ -582,9 +1126,15 @@ class WorkflowBuilder extends Component {
         this.state.selectedNode = null;
     }
 
-    updateNodeConfig(key, value) {
+    updateNodeConfig(nodeId, key, value) {
+        if (this.state.nodeConfigs[nodeId]) {
+            this.state.nodeConfigs[nodeId].config[key] = value;
+            this.updateNodeStatus(nodeId);
+        }
         if (this.state.selectedNode && this.state.nodeConfigs[this.state.selectedNode]) {
             this.state.nodeConfigs[this.state.selectedNode].config[key] = value;
+            this.updateNodeStatus(this.state.selectedNode);
+            this.state.configUpdateCounter++;
         }
     }
 
