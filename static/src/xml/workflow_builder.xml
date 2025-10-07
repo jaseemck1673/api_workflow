@@ -187,7 +187,9 @@
                                         <span class="section-icon">▶️</span>
                                         Start Configuration
                                     </div>
-                                    <div class="help-text">This is the entry point of your workflow. No configuration needed here, but the node must be present.</div>
+                                    <div class="help-text">This is the entry point of your workflow. No configuration
+                                        needed here, but the node must be present.
+                                    </div>
                                     <div style="text-align: center; padding: 20px; background: rgba(40, 167, 69, 0.1); border-radius: 6px; color: #28a745;">
                                         ✅ Workflow starts here
                                     </div>
@@ -220,7 +222,8 @@
                                            class="config-input"
                                            placeholder="/api/users"
                                            t-att-value="nodeConfig.config.url || ''"
-                                           t-on-input="(ev) => this.updateNodeConfig('url', ev.target.value)"/>
+                                           t-on-input="(ev) => this.updateNodeConfig(state.selectedNode,
+                                           'url', ev.target.value)"/>
                                     <div class="help-text">The relative path or full URL for the API call.</div>
                                 </div>
 
@@ -234,7 +237,7 @@
                                            class="config-input"
                                            placeholder="https://api.example.com"
                                            t-att-value="nodeConfig.config.baseUrl || ''"
-                                           t-on-input="(ev) => this.updateNodeConfig('baseUrl', ev.target.value)"/>
+                                           t-on-input="(ev) => this.updateNodeConfig(state.selectedNode,'baseUrl', ev.target.value)"/>
                                     <div class="help-text">The common base URL for all API calls in the workflow.</div>
                                 </div>
 
@@ -247,7 +250,8 @@
                                     <label class="config-label">Auth Type</label>
                                     <select class="config-select"
                                             t-att-value="nodeConfig.config.authType || 'none'"
-                                            t-on-change="(ev) => this.updateAuthType(state.selectedNode, ev.target.value)">
+                                            t-on-change="(ev) => this.updateAuthType(state.selectedNode,
+                                             ev.target.value)">
                                         <option value="none">None</option>
                                         <option value="basic">Basic Auth</option>
                                         <option value="bearer">Bearer Token</option>
@@ -261,14 +265,14 @@
                                                class="config-input"
                                                placeholder="user"
                                                t-att-value="nodeConfig.config.username || ''"
-                                               t-on-input="(ev) => this.updateNodeConfig('username', ev.target.value)"/>
+                                               t-on-input="(ev) => this.updateNodeConfig(state.selectedNode,'username', ev.target.value)"/>
 
                                         <label class="config-label">Password</label>
                                         <input type="password"
                                                class="config-input"
                                                placeholder="password"
                                                t-att-value="nodeConfig.config.password || ''"
-                                               t-on-input="(ev) => this.updateNodeConfig('password', ev.target.value)"/>
+                                               t-on-input="(ev) => this.updateNodeConfig(state.selectedNode,'password', ev.target.value)"/>
                                     </t>
 
                                     <!-- Bearer Token Fields -->
@@ -278,7 +282,7 @@
                                                class="config-input"
                                                placeholder="eyJhbGciOiJIUzI1Ni..."
                                                t-att-value="nodeConfig.config.token || ''"
-                                               t-on-input="(ev) => this.updateNodeConfig('token', ev.target.value)"/>
+                                               t-on-input="(ev) => this.updateNodeConfig(state.selectedNode,'token', ev.target.value)"/>
                                     </t>
 
                                     <!-- API Key Fields -->
@@ -288,12 +292,13 @@
                                                class="config-input"
                                                placeholder="YourSecretKey"
                                                t-att-value="nodeConfig.config.apiKey || ''"
-                                               t-on-input="(ev) => this.updateNodeConfig('apiKey', ev.target.value)"/>
+                                               t-on-input="(ev) => this.updateNodeConfig(state.selectedNode, 'apiKey', ev.target.value)"/>
 
                                         <label class="config-label">Key Location</label>
                                         <select class="config-select"
                                                 t-att-value="nodeConfig.config.keyLocation || 'header'"
-                                                t-on-change="(ev) => this.updateNodeConfig('keyLocation', ev.target.value)">
+                                                t-on-change="(ev) => this.updateNodeConfig(state.selectedNode,'keyLocation','authType',
+                                                 ev.target.value)">
                                             <option value="header">Header</option>
                                             <option value="query">Query Parameter</option>
                                         </select>
@@ -321,7 +326,7 @@
                                            class="config-input"
                                            placeholder="/api/users"
                                            t-att-value="nodeConfig.config.url || ''"
-                                           t-on-input="(ev) => this.updateNodeConfig('url', ev.target.value)"/>
+                                           t-on-input="(ev) => this.updateNodeConfig(state.selectedNode, 'url', ev.target.value)"/>
                                     <div class="help-text">The relative path or full URL for the API call.</div>
                                 </div>
 
@@ -344,25 +349,197 @@
                                 </div>
 
                                 <!-- Request Body for POST/PUT -->
+                                <!--                                <t t-if="nodeConfig.type === 'post' or nodeConfig.type === 'put'">-->
+                                <!--                                    <div class="config-section">-->
+                                <!--                                        <div class="section-title">-->
+                                <!--                                            <span class="section-icon">📝</span>-->
+                                <!--                                            Request Body (JSON)-->
+                                <!--                                        </div>-->
+                                <!--                                        <div class="help-text">Enter the JSON payload for POST/PUT requests. Use double-->
+                                <!--                                            quotes for keys and string values.-->
+                                <!--                                        </div>-->
+                                <!--                                        <div class="template-buttons">-->
+                                <!--                                            <button class="template-btn"-->
+                                <!--                                                    t-on-click="() => this.applyBodyTemplate(state.selectedNode, 'object')">-->
+                                <!--                                                { "key": "value" }-->
+                                <!--                                            </button>-->
+                                <!--                                            <button class="template-btn"-->
+                                <!--                                                    t-on-click="() => this.applyBodyTemplate(state.selectedNode, 'array')">-->
+                                <!--                                                [ { "item": 1 } ]-->
+                                <!--                                            </button>-->
+                                <!--                                        </div>-->
+                                <!--                                        <label class="config-label">JSON Payload</label>-->
+                                <!--                                        <textarea class="config-textarea"-->
+                                <!--                                                  placeholder='{"key": "value"}'-->
+                                <!--                                                  t-att-value="nodeConfig.config.body || ''"-->
+                                <!--                                                  t-on-input="(ev) => this.updateNodeConfig('body', ev.target.value)"></textarea>-->
+                                <!--                                    </div>-->
+                                <!--                                </t>-->
                                 <t t-if="nodeConfig.type === 'post' or nodeConfig.type === 'put'">
                                     <div class="config-section">
                                         <div class="section-title">
                                             <span class="section-icon">📝</span>
-                                            Request Body (JSON)
+                                            Request Body
                                         </div>
-                                        <div class="help-text">Enter the JSON payload for POST/PUT requests. Use double quotes for keys and string values.</div>
-                                        <div class="template-buttons">
-                                            <button class="template-btn" t-on-click="() => this.applyBodyTemplate(state.selectedNode, 'object')">{ "key": "value" }</button>
-                                            <button class="template-btn" t-on-click="() => this.applyBodyTemplate(state.selectedNode, 'array')">[ { "item": 1 } ]</button>
+
+                                        <!-- Body Type Selection -->
+                                        <div class="config-section">
+                                            <div class="section-title">
+                                                <span class="section-icon">🔘</span>
+                                                Body Format
+                                            </div>
+                                            <label class="config-label">Body Type</label>
+                                            <div class="body-type-selector">
+                                                <label class="radio-label">
+                                                    <input type="radio"
+                                                           name="bodyType"
+                                                           value="json"
+                                                           t-att-checked="nodeConfig.config.bodyType !== 'form'"
+                                                           t-on-change="(ev) => this.updateBodyType('json')"/>
+                                                    <span class="radio-custom"></span>
+                                                    JSON Raw
+                                                </label>
+                                                <label class="radio-label">
+                                                    <input type="radio"
+                                                           name="bodyType"
+                                                           value="form"
+                                                           t-att-checked="nodeConfig.config.bodyType === 'form'"
+                                                           t-on-change="(ev) => this.updateBodyType('form')"/>
+                                                    <span class="radio-custom"></span>
+                                                    Form Data
+                                                </label>
+                                            </div>
+                                            <div class="help-text">Choose between raw JSON or form-based data
+                                                structure
+                                            </div>
                                         </div>
-                                        <label class="config-label">JSON Payload</label>
-                                        <textarea class="config-textarea"
-                                                  placeholder='{"key": "value"}'
-                                                  t-att-value="nodeConfig.config.body || ''"
-                                                  t-on-input="(ev) => this.updateNodeConfig('body', ev.target.value)"></textarea>
+
+                                        <!-- JSON Structure -->
+                                        <t t-if="nodeConfig.config.bodyType !== 'form'">
+                                            <div class="config-section">
+                                                <div class="section-title">
+                                                    <span class="section-icon">📄</span>
+                                                    JSON Payload
+                                                </div>
+                                                <div class="help-text">Enter the JSON payload for POST/PUT requests. Use
+                                                    double quotes for keys and string values.
+                                                </div>
+                                                <div class="template-buttons">
+                                                    <button class="template-btn"
+                                                            t-on-click="() => this.applyBodyTemplate('object')">
+                                                        { "key": "value" }
+                                                    </button>
+                                                    <button class="template-btn"
+                                                            t-on-click="() => this.applyBodyTemplate('array')">
+                                                        [ { "item": 1 } ]
+                                                    </button>
+                                                    <button class="template-btn"
+                                                            t-on-click="() => this.formManager.convertFormToJson()">
+                                                        🔄 From Form
+                                                    </button>
+                                                </div>
+                                                <label class="config-label">JSON Payload</label>
+                                                <textarea class="config-textarea json-payload"
+                                                          placeholder='{"key": "value"}'
+                                                          t-att-value="nodeConfig.config.body || ''"
+                                                          t-on-input="(ev) => this.updateNodeConfig('body', ev.target.value)"></textarea>
+                                            </div>
+                                        </t>
+
+                                        <!-- Form Structure -->
+                                        <t t-if="nodeConfig.config.bodyType === 'form'">
+                                            <div class="config-section">
+                                                <div class="section-title">
+                                                    <span class="section-icon">📋</span>
+                                                    Form Data Structure
+                                                </div>
+                                                <div class="help-text">Add key-value pairs for your request body. These
+                                                    will be converted to JSON format.
+                                                </div>
+
+                                                <!-- Add Field Button at TOP -->
+                                                <div class="form-header-actions">
+                                                    <t t-if="formManager.hasFormFields(state.selectedNode)">
+                                                        <button class="clear-all-fields-btn"
+                                                                t-on-click="formManager.clearAllFormFields">
+                                                            🗑️ Clear All
+                                                        </button>
+                                                    </t>
+                                                </div>
+
+                                                <!-- Form Fields List -->
+                                                <div class="form-fields-container">
+                                                    <t t-if="!formManager.hasFormFields(state.selectedNode)">
+                                                        <div class="no-fields-message">
+                                                            <div class="no-fields-icon">📝</div>
+                                                            <h4>No Form Fields Added</h4>
+                                                            <p>Click "Add New Field" above to start building your form
+                                                                data structure
+                                                            </p>
+                                                        </div>
+                                                    </t>
+
+                                                    <t t-foreach="nodeConfig.config.formFields" t-as="field"
+                                                       t-key="field_index">
+                                                        <div class="form-field-row">
+                                                            <div class="form-field-inputs">
+                                                                <div class="input-group">
+                                                                    <label class="input-label">Field Name (Key)</label>
+                                                                    <input type="text"
+                                                                           class="config-input form-field-key"
+                                                                           placeholder="Enter field name (e.g., username, email, age)"
+                                                                           t-att-value="field.key"
+                                                                           t-on-input="(ev) => formManager.updateFormField(field_index, 'key', ev.target.value)"/>
+                                                                </div>
+                                                                <div class="input-group">
+                                                                    <label class="input-label">Field Value</label>
+                                                                    <input type="text"
+                                                                           class="config-input form-field-value"
+                                                                           placeholder="Enter field value (e.g., john_doe, user@example.com, 25)"
+                                                                           t-att-value="field.value"
+                                                                           t-on-input="(ev) => formManager.updateFormField(field_index, 'value', ev.target.value)"/>
+                                                                </div>
+                                                                <div class="form-field-header">
+                                                                    <button class="remove-form-field-btn"
+                                                                            t-on-click="() => formManager.removeFormField(field_index)"
+                                                                            title="Remove this field">
+                                                                        🗑️ Remove
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </t>
+                                                </div>
+
+                                                <!-- Bottom Actions -->
+                                                <t t-if="formManager.hasFormFields(state.selectedNode)">
+                                                    <div class="form-footer-actions">
+                                                        <button class="add-form-field-btn"
+                                                                t-on-click="formManager.addFormField">
+                                                            ➕ Add Another Field
+                                                        </button>
+                                                        <button class="convert-to-json-btn"
+                                                                t-on-click="formManager.convertFormToJson">
+                                                            🔄 Convert to JSON
+                                                        </button>
+                                                    </div>
+
+                                                    <!-- JSON Preview -->
+                                                    <div class="config-section">
+                                                        <div class="section-title">
+                                                            <span class="section-icon">👁️</span>
+                                                            JSON Preview
+                                                        </div>
+                                                        <label class="config-label">Generated JSON</label>
+                                                        <div class="json-preview">
+                                                            <t t-esc="formManager.generateJsonFromForm(nodeConfig.config.formFields)"/>
+                                                        </div>
+                                                    </div>
+                                                </t>
+                                            </div>
+                                        </t>
                                     </div>
                                 </t>
-
                                 <!-- Test Button and Response Area -->
                                 <button class="test-button" t-on-click="() => this.runApiTest(state.selectedNode)">
                                     ⚡ Run API Test
@@ -383,7 +560,8 @@
                                     <label class="config-label">Auth Type</label>
                                     <select class="config-select"
                                             t-att-value="nodeConfig.config.authType || 'none'"
-                                            t-on-change="(ev) => this.updateAuthType(state.selectedNode, ev.target.value)">
+                                            t-on-change="(ev) => this.updateAuthType(state.selectedNode,
+                                             ev.target.value)">
                                         <option value="none">None</option>
                                         <option value="basic">Basic Auth</option>
                                         <option value="bearer">Bearer Token</option>
@@ -427,7 +605,8 @@
                                         <label class="config-label">Key Location</label>
                                         <select class="config-select"
                                                 t-att-value="nodeConfig.config.keyLocation || 'header'"
-                                                t-on-change="(ev) => this.updateNodeConfig('keyLocation', ev.target.value)">
+                                                t-on-change="(ev) => this.updateNodeConfig('keyLocation','authType',
+                                                 ev.target.value)">
                                             <option value="header">Header</option>
                                             <option value="query">Query Parameter</option>
                                         </select>
@@ -450,14 +629,19 @@
                                         <span class="section-icon">❓</span>
                                         Query Parameters
                                     </div>
-                                    <div class="help-text">Add query parameters (e.g., `?userId=1`). Key and Value are added to the URL.</div>
+                                    <div class="help-text">Add query parameters (e.g., `?userId=1`). Key and Value are
+                                        added to the URL.
+                                    </div>
 
                                     <!-- Parameters List -->
                                     <div class="param-builder">
                                         <t t-foreach="nodeConfig.config.params || []" t-as="param" t-key="param_index">
                                             <div class="param-item">
                                                 <span t-esc="param.key + ': ' + param.value"/>
-                                                <span class="remove-btn" t-on-click="() => this.removeParam(state.selectedNode, 'params', param_index)">×</span>
+                                                <span class="remove-btn"
+                                                      t-on-click="() => this.removeParam(state.selectedNode, 'params', param_index)">
+                                                    ×
+                                                </span>
                                             </div>
                                         </t>
                                     </div>
@@ -474,7 +658,8 @@
                                            placeholder="value_content"
                                            t-att-id="'param-value-' + state.selectedNode"/>
 
-                                    <button class="add-btn" t-on-click="() => this.addParamFromInputs(state.selectedNode, 'params')">
+                                    <button class="add-btn"
+                                            t-on-click="() => this.addParamFromInputs(state.selectedNode, 'params')">
                                         + Add Parameter
                                     </button>
                                 </div>
@@ -487,14 +672,20 @@
                                         <span class="section-icon">📋</span>
                                         Custom Headers
                                     </div>
-                                    <div class="help-text">Add custom HTTP headers (e.g., `Content-Type: application/json`).</div>
+                                    <div class="help-text">Add custom HTTP headers (e.g., `Content-Type:
+                                        application/json`).
+                                    </div>
 
                                     <!-- Headers List -->
                                     <div class="param-builder">
-                                        <t t-foreach="nodeConfig.config.headers || []" t-as="header" t-key="header_index">
+                                        <t t-foreach="nodeConfig.config.headers || []" t-as="header"
+                                           t-key="header_index">
                                             <div class="param-item">
                                                 <span t-esc="header.key + ': ' + header.value"/>
-                                                <span class="remove-btn" t-on-click="() => this.removeParam(state.selectedNode, 'headers', header_index)">×</span>
+                                                <span class="remove-btn"
+                                                      t-on-click="() => this.removeParam(state.selectedNode, 'headers', header_index)">
+                                                    ×
+                                                </span>
                                             </div>
                                         </t>
                                     </div>
@@ -511,7 +702,8 @@
                                            placeholder="application/json"
                                            t-att-id="'header-value-' + state.selectedNode"/>
 
-                                    <button class="add-btn" t-on-click="() => this.addParamFromInputs(state.selectedNode, 'headers')">
+                                    <button class="add-btn"
+                                            t-on-click="() => this.addParamFromInputs(state.selectedNode, 'headers')">
                                         + Add Header
                                     </button>
                                 </div>
@@ -524,10 +716,18 @@
                                         <span class="section-icon">📝</span>
                                         Request Body (JSON)
                                     </div>
-                                    <div class="help-text">Enter the JSON payload for POST/PUT requests. Use double quotes for keys and string values.</div>
+                                    <div class="help-text">Enter the JSON payload for POST/PUT requests. Use double
+                                        quotes for keys and string values.
+                                    </div>
                                     <div class="template-buttons">
-                                        <button class="template-btn" t-on-click="() => this.applyBodyTemplate(state.selectedNode, 'object')">{ "key": "value" }</button>
-                                        <button class="template-btn" t-on-click="() => this.applyBodyTemplate(state.selectedNode, 'array')">[ { "item": 1 } ]</button>
+                                        <button class="template-btn"
+                                                t-on-click="() => this.applyBodyTemplate(state.selectedNode, 'object')">
+                                            { "key": "value" }
+                                        </button>
+                                        <button class="template-btn"
+                                                t-on-click="() => this.applyBodyTemplate(state.selectedNode, 'array')">[
+                                            { "item": 1 } ]
+                                        </button>
                                     </div>
                                     <label class="config-label">JSON Payload</label>
                                     <textarea class="config-textarea"

@@ -7,6 +7,8 @@ import { NodeManager } from "./node_manager";
 import { ConnectionManager } from "./connection_manager";
 import { WorkflowIO } from "./workflow_io";
 import { NodeTemplates } from "./node_templates";
+import { FormManager } from "./form_manager";
+
 
 class WorkflowBuilder extends Component {
     setup() {
@@ -31,6 +33,7 @@ class WorkflowBuilder extends Component {
         this.connectionManager = new ConnectionManager(this);
         this.workflowIO = new WorkflowIO(this);
         this.nodeTemplates = new NodeTemplates(this);
+        this.formManager = new FormManager(this);
 
         onMounted(() => {
             this.setupDragAndDrop();
@@ -281,10 +284,27 @@ class WorkflowBuilder extends Component {
     }
 
     // Add the missing methods that are called from templates
-    updateAuthType(nodeId, authType) {
-        console.log('🔐 Updating auth type:', { nodeId, authType });
-        this.nodeTemplates.updateAuthType(nodeId, authType);
-        this.setupConfigEventHandlers(); // Refresh UI to show/hide auth fields
+   updateAuthType(nodeId, authType) {
+        const nodeConfig = this.state.nodeConfigs[nodeId];
+        if (!nodeConfig) return;
+
+        console.log('🔄 Updating auth type for node:', nodeId, 'to:', authType);
+
+        // Update the authType
+        nodeConfig.config.authType = authType;
+
+        // Reset all auth fields
+        const authFields = ['username', 'password', 'token', 'apiKey', 'keyLocation'];
+        authFields.forEach(field => {
+            if (nodeConfig.config[field] !== undefined) {
+                nodeConfig.config[field] = '';
+            }
+        });
+
+        // Force reactivity update - DO NOT call updateState() as it doesn't exist
+        this.state.configUpdateCounter++;
+
+        console.log('✅ Auth type updated successfully');
     }
 
     removeParam(nodeId, paramType, index) {
@@ -324,7 +344,162 @@ class WorkflowBuilder extends Component {
         return this.state.nodeConfigs;
     }
 
+    // Add these methods to the WorkflowBuilder class
+
+    updateBodyType(bodyType) {
+        const nodeId = this.state.selectedNode;
+        if (nodeId) {
+            this.formManager.updateBodyType(bodyType);
+        }
+
+        console.log('🔄 Updating body type to:', bodyType);
+
+        // Update body type
+        this.updateNodeConfig('bodyType', bodyType);
+
+        const nodeConfig = this.state.nodeConfigs[nodeId];
+
+        // Initialize formFields if switching to form mode
+        if (bodyType === 'form' && (!nodeConfig.config.formFields || !Array.isArray(nodeConfig.config.formFields))) {
+            this.updateNodeConfig('formFields', []);
+        }
+
+        // Convert existing JSON to form fields if available and switching to form mode
+        if (bodyType === 'form' && nodeConfig.config.body) {
+            this.convertJsonToForm();
+        }
+    }
+
+    addFormField() {
+        const nodeId = this.state.selectedNode;
+        if (!nodeId) return;
+
+        const nodeConfig = this.state.nodeConfigs[nodeId];
+        if (!nodeConfig.config.formFields) {
+            nodeConfig.config.formFields = [];
+        }
+
+        // Add new empty field
+        nodeConfig.config.formFields.push({
+            key: '',
+            value: ''
+        });
+
+        console.log('➕ Added form field. Total fields:', nodeConfig.config.formFields.length);
+        this.state.configUpdateCounter++;
+    }
+
+    updateFormField(index, fieldType, value) {
+        const nodeId = this.state.selectedNode;
+        if (!nodeId) return;
+
+        const nodeConfig = this.state.nodeConfigs[nodeId];
+        if (nodeConfig.config.formFields && nodeConfig.config.formFields[index]) {
+            nodeConfig.config.formFields[index][fieldType] = value;
+            console.log('✏️ Updated form field:', { index, fieldType, value });
+            this.state.configUpdateCounter++;
+        }
+    }
+
+    removeFormField(index) {
+        const nodeId = this.state.selectedNode;
+        if (!nodeId) return;
+
+        const nodeConfig = this.state.nodeConfigs[nodeId];
+        if (nodeConfig.config.formFields && nodeConfig.config.formFields.length > index) {
+            nodeConfig.config.formFields.splice(index, 1);
+            console.log('🗑️ Removed form field at index:', index);
+            this.state.configUpdateCounter++;
+        }
+    }
+
+    convertFormToJson() {
+        const nodeId = this.state.selectedNode;
+        if (!nodeId) return;
+
+        const nodeConfig = this.state.nodeConfigs[nodeId];
+        if (!nodeConfig.config.formFields) return;
+
+        // Generate JSON from form fields
+        const jsonObject = {};
+        nodeConfig.config.formFields.forEach(field => {
+            if (field.key && field.key.trim() !== '') {
+                // Try to parse value as JSON, otherwise use as string
+                try {
+                    jsonObject[field.key] = JSON.parse(field.value);
+                } catch (e) {
+                    jsonObject[field.key] = field.value;
+                }
+            }
+        });
+
+        const jsonString = JSON.stringify(jsonObject, null, 2);
+        this.updateNodeConfig('body', jsonString);
+        this.updateNodeConfig('bodyType', 'json');
+
+        console.log('📄 Converted form to JSON:', jsonString);
+        this.notification.add("Form data converted to JSON!", { type: 'success' });
+    }
+
+    convertJsonToForm() {
+        const nodeId = this.state.selectedNode;
+        if (!nodeId) return;
+
+        const nodeConfig = this.state.nodeConfigs[nodeId];
+        if (!nodeConfig.config.body) return;
+
+        try {
+            const jsonObject = JSON.parse(nodeConfig.config.body);
+            const formFields = [];
+
+            // Convert JSON object to form fields
+            Object.entries(jsonObject).forEach(([key, value]) => {
+                formFields.push({
+                    key: key,
+                    value: typeof value === 'object' ? JSON.stringify(value) : String(value)
+                });
+            });
+
+            this.updateNodeConfig('formFields', formFields);
+            console.log('📋 Converted JSON to form fields:', formFields);
+            this.notification.add("JSON converted to form data!", { type: 'success' });
+        } catch (error) {
+            console.error('❌ Error parsing JSON:', error);
+            this.notification.add("Invalid JSON format", { type: 'danger' });
+        }
+    }
+
+    generateJsonFromForm(formFields) {
+        if (!formFields || !Array.isArray(formFields)) {
+            return '{}';
+        }
+
+        const jsonObject = {};
+        formFields.forEach(field => {
+            if (field.key && field.key.trim() !== '') {
+                // Try to parse value as JSON, otherwise use as string
+                try {
+                    jsonObject[field.key] = JSON.parse(field.value);
+                } catch (e) {
+                    jsonObject[field.key] = field.value;
+                }
+            }
+        });
+
+        return JSON.stringify(jsonObject, null, 2);
+    }
+
     // Delegate methods to managers
+     updateBodyType(bodyType) { this.formManager.updateBodyType(bodyType); }
+    addFormField() { this.formManager.addFormField(); }
+    updateFormField(index, fieldType, value) { this.formManager.updateFormField(index, fieldType, value); }
+    removeFormField(index) { this.formManager.removeFormField(index); }
+    clearAllFormFields() { this.formManager.clearAllFormFields(); }
+    convertFormToJson() { this.formManager.convertFormToJson(); }
+    convertJsonToForm() { this.formManager.convertJsonToForm(); }
+    generateJsonFromForm(formFields) { return this.formManager.generateJsonFromForm(formFields); }
+
+    //========================
     clearCanvas() { return this.nodeManager.clearCanvas(); }
     testWorkflow() { return this.workflowIO.testWorkflow(); }
     exportWorkflow() { return this.workflowIO.exportWorkflow(); }
