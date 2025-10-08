@@ -23,8 +23,8 @@ export class NodeManager {
 
         nodeElement.innerHTML = `
             <button class="delete-node" title="Delete node">×</button>
-            <div class="connection-point input"></div>
-            <div class="connection-point output"></div>
+            <div class="connection-point input" @click="startConnection('node-1', true)"></div>
+            <div class="connection-point output" @click="startConnection('node-1', false)"></div>
             <div class="node-header">
                 <div class="node-icon">${this.nodeTemplates.getNodeIcon(type)}</div>
                 <div class="node-title">${this.nodeTemplates.getNodeTitle(type)}</div>

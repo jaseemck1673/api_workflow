@@ -1011,6 +1011,7 @@
     display: flex;
     flex: 1;
     gap: 8px;
+    background: #374151;
 }
 
 .form-field-key,
@@ -1129,6 +1130,8 @@
     font-size: 0.85rem;
     min-height: 150px;
     resize: vertical;
+    background: #374151;
+    color: #e5e7eb;
 }
 
 /* Scrollbar for form fields */
@@ -1175,7 +1178,7 @@
 
 .form-fields-container .input-label {
     margin-bottom: 5px;
-    font-weight: bold;
+    font-weight: bold;black
 }
 
 .form-fields-container .config-input {
@@ -1203,7 +1206,7 @@
     border-radius: 6px;
     padding: 15px;
     margin-bottom: 10px;
-    background: #f8f9fa;
+    background:  #374151;
 }
 
 .form-field-header {
@@ -1232,9 +1235,9 @@
 
 .input-label {
     font-size: 0.8rem;
-    font-weight: bold;
+    font-weight: 500;
     margin-bottom: 5px;
-    color: #495057;
+    color: white;
 }
 
 .no-fields-message {
@@ -1255,7 +1258,7 @@
 }
 
 .json-preview {
-    background: #f8f9fa;
+    background:  #374151;
     border: 1px solid #e9ecef;
     border-radius: 4px;
     padding: 10px;
@@ -1263,4 +1266,12 @@
     white-space: pre-wrap;
     max-height: 200px;
     overflow-y: auto;
+}
+.workflow-node {
+    position: absolute;
+    z-index: 2; /* Higher than connections */
+}
+
+.connections-layer {
+    z-index: 1; /* Lower than nodes */
 }

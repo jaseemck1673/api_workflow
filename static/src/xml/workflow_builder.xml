@@ -212,20 +212,20 @@
 
                             <!-- Endpoint Node Config -->
                             <t t-if="nodeConfig.type === 'endpoint'">
-                                <div class="config-section">
-                                    <div class="section-title">
-                                        <span class="section-icon">🌐</span>
-                                        Endpoint Details
-                                    </div>
-                                    <label class="config-label">API URL Path</label>
-                                    <input type="text"
-                                           class="config-input"
-                                           placeholder="/api/users"
-                                           t-att-value="nodeConfig.config.url || ''"
-                                           t-on-input="(ev) => this.updateNodeConfig(state.selectedNode,
-                                           'url', ev.target.value)"/>
-                                    <div class="help-text">The relative path or full URL for the API call.</div>
-                                </div>
+<!--                                <div class="config-section">-->
+<!--                                    <div class="section-title">-->
+<!--                                        <span class="section-icon">🌐</span>-->
+<!--                                        Endpoint Details-->
+<!--                                    </div>-->
+<!--                                    <label class="config-label">API URL Path</label>-->
+<!--                                    <input type="text"-->
+<!--                                           class="config-input"-->
+<!--                                           placeholder="/api/users"-->
+<!--                                           t-att-value="nodeConfig.config.url || ''"-->
+<!--                                           t-on-input="(ev) => this.updateNodeConfig(state.selectedNode,-->
+<!--                                           'url', ev.target.value)"/>-->
+<!--                                    <div class="help-text">The relative path or full URL for the API call.</div>-->
+<!--                                </div>-->
 
                                 <div class="config-section">
                                     <div class="section-title">
