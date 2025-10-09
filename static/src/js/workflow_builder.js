@@ -336,10 +336,19 @@ class WorkflowBuilder extends Component {
         nodeConfig.config.authType = authType;
 
         // Reset all auth fields
-        const authFields = ['username', 'password', 'token', 'apiKey', 'keyLocation'];
+        const authFields = ['username', 'password', 'token', 'apiKey', 'keyLocation',  'keyName', 'headerPrefix'];
         authFields.forEach(field => {
             if (nodeConfig.config[field] !== undefined) {
-                nodeConfig.config[field] = '';
+                // Set default values for API key fields
+                if (field === 'keyName' && authType === 'api-key') {
+                    nodeConfig.config[field] = 'X-API-Key';
+                } else if (field === 'keyLocation' && authType === 'api-key') {
+                    nodeConfig.config[field] = 'header';
+                } else if (field === 'headerPrefix' && authType === 'api-key') {
+                    nodeConfig.config[field] = '';
+                } else {
+                    nodeConfig.config[field] = '';
+                }
             }
         });
 

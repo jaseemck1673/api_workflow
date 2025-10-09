@@ -18,7 +18,6 @@ class APIWorkflow(models.Model):
     active = fields.Boolean(string='Active', default=True)
     created_date = fields.Datetime(string='Created Date', default=fields.Datetime.now)
 
-
     def _join_url(self, base, path):
         """
         Helper to join base URL and path cleanly.
@@ -30,27 +29,88 @@ class APIWorkflow(models.Model):
             return base
         return f"{base.rstrip('/')}/{path.lstrip('/')}"
 
-    def _test_url(self, url, headers=None):
+    def _test_url(self, url, headers=None, auth_type='none', config=None):
         """
-        Performs a GET request to the given URL and returns parsed JSON.
+        Enhanced _test_url method with authentication support
+        (Supports Bearer and API Key authentication in header or query)
         """
         print('_test_url', url)
-        if headers:
-            print('headers')
-            response = requests.get(url, headers=headers, timeout=10, verify=True)
-        else:
-            print('no header')
-            response = requests.get(url, timeout=10, verify=True)
-        response.raise_for_status()  # raises error if 4xx/5xx
+        config = config or {}
+        headers = headers or {}
 
         try:
-            data = response.json()
-            print('data', data)# Parse JSON response
-        except ValueError:
-            data = response.text  # If it's not JSON, return raw text
+            # 🔐 Add authentication headers if needed
+            if auth_type == 'bearer':
+                headers = self._setup_bearer_auth(headers, config)
+                print('🔑 Using Bearer token authentication')
 
-        _logger.info(f"API GET Response from {url}: {data}")
-        return data
+            elif auth_type == 'api-key':
+                headers = self._setup_api_key_auth(headers, config)
+                print('🔑 Using API Key authentication')
+
+            # 🧩 Handle query parameters for API key (if keyLocation == "query")
+            final_url = url
+            if auth_type == 'api-key' and config.get('keyLocation') == 'query':
+                from urllib.parse import urlencode, urlparse, parse_qs, urlunparse
+
+                api_key = config.get('apiKey') or 'DEMO_KEY'
+                query_params = config.get('query_params', {})
+
+                # Ensure api_key is included
+                query_params.setdefault('api_key', api_key)
+
+                parsed_url = urlparse(url)
+                existing_params = parse_qs(parsed_url.query)
+                merged_params = {**existing_params, **query_params}
+                query_string = urlencode(merged_params, doseq=True)
+
+                final_url = urlunparse((
+                    parsed_url.scheme,
+                    parsed_url.netloc,
+                    parsed_url.path,
+                    parsed_url.params,
+                    query_string,
+                    parsed_url.fragment
+                ))
+
+                print(f"🔗 Final URL with query params: {final_url}")
+
+            print(f'🔗 Testing URL: {final_url} with auth: {auth_type}')
+
+            # 🧾 Perform GET request
+            if headers:
+                print('📬 Headers:', headers)
+                response = requests.get(final_url, headers=headers, timeout=10, verify=True)
+            else:
+                print('⚠️ No headers provided')
+                response = requests.get(final_url, timeout=10, verify=True)
+
+            response.raise_for_status()
+
+            # 📦 Parse response
+            try:
+                data = response.json()
+                print('✅ JSON Data received:', data)
+            except ValueError:
+                data = response.text
+                print('ℹ️ Non-JSON response received')
+
+            _logger.info(f"API GET Response from {final_url}: {data}")
+
+            return {
+                'status_code': response.status_code,
+                'headers': dict(response.headers),
+                'data': data,
+                'response_time': response.elapsed.total_seconds(),
+            }
+
+        except requests.exceptions.RequestException as e:
+            _logger.error(f"Request failed for {final_url}: {str(e)}")
+            raise e
+
+        except Exception as e:
+            _logger.error(f"Unexpected error testing {final_url}: {str(e)}")
+            raise e
 
 
     @api.model
@@ -86,16 +146,12 @@ class APIWorkflow(models.Model):
                 config = node.get('config', {})
                 path = config.get('url', '')
                 full_url = self._join_url(base_url, path)
-                response_data = self._test_url(full_url)
-                results.append({
-                    'node_id': node['id'],
-                    'node_type': node.get('type'),
-                    'url': full_url,
-                    'response': response_data
-                })
 
                 node_type = node.get('type', 'unknown')
+                auth_type = config.get('authType', 'none')
+
                 print('node_type', node_type)
+                print('auth_type', auth_type)
 
                 # Skip non-API nodes
                 if node_type not in ['get', 'post', 'put', 'delete', 'endpoint']:
@@ -108,27 +164,46 @@ class APIWorkflow(models.Model):
                     })
                     continue
 
-                # Get URL and authentication details
-                url = config.get('url') or config.get('baseUrl')
-                print('config', config)
-                auth_type = config.get('authType', 'none')
-                print('auth_type', auth_type)
+                # For GET requests, use _test_url with authentication
+                if node_type == 'get':
+                    try:
+                        # Prepare headers for authentication
+                        headers = {
+                            'Content-Type': 'application/json',
+                            'User-Agent': 'Odoo-API-Workflow/1.0'
+                        }
 
-                if not url:
-                    results.append({
-                        'node_id': node['id'],
-                        'node_type': node_type,
-                        'status': 'skipped',
-                        'message': 'No URL found',
-                        'url': None
-                    })
-                    continue
+                        # Add custom headers if any
+                        custom_headers = config.get('headers', [])
+                        for header in custom_headers:
+                            headers[header['key']] = header['value']
 
-                # Make API call with authentication
-                result = self._make_api_call_with_auth(url, node_type, config, auth_type)
-                result['node_id'] = node['id']
-                result['node_type'] = node_type
-                results.append(result)
+                        response_data = self._test_url(full_url, headers, auth_type, config)
+                        results.append({
+                            'node_id': node['id'],
+                            'node_type': node_type,
+                            'status': 'success',
+                            'message': f'GET request successful - HTTP {response_data.get("status_code", "Unknown")}',
+                            'url': full_url,
+                            'response_data': response_data.get('data'),
+                            'status_code': response_data.get('status_code'),
+                            'response_time': response_data.get('response_time')
+                        })
+                    except Exception as e:
+                        results.append({
+                            'node_id': node['id'],
+                            'node_type': node_type,
+                            'status': 'error',
+                            'message': f'GET request failed: {str(e)}',
+                            'url': full_url,
+                            'error': str(e)
+                        })
+                else:
+                    # For other HTTP methods, use _make_api_call_with_auth
+                    result = self._make_api_call_with_auth(full_url, node_type, config, auth_type)
+                    result['node_id'] = node['id']
+                    result['node_type'] = node_type
+                    results.append(result)
 
             return {
                 'success': True,
@@ -173,6 +248,23 @@ class APIWorkflow(models.Model):
                 headers = self._setup_bearer_auth(headers, config)
             elif auth_type == 'api-key':
                 headers = self._setup_api_key_auth(headers, config)
+
+            final_url = url
+            if auth_type == 'api-key' and config.get('keyLocation') == 'query':
+                query_params = config.get('query_params', {})
+                if query_params:
+                    from urllib.parse import urlencode, urlparse, parse_qs
+                    # Parse existing URL and add query parameters
+                    parsed_url = urlparse(url)
+                    existing_params = parse_qs(parsed_url.query)
+                    # Merge existing params with new params
+                    merged_params = {**existing_params, **query_params}
+                    # Rebuild URL with all parameters
+                    query_string = urlencode(merged_params, doseq=True)
+                    final_url = f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}"
+                    if query_string:
+                        final_url += f"?{query_string}"
+                    print(f"🔗 Final URL with query params: {final_url}")
 
             # Prepare request data
             data = None
@@ -240,10 +332,18 @@ class APIWorkflow(models.Model):
         api_key = config.get('apiKey', '')
         key_location = config.get('keyLocation', 'header')
         key_name = config.get('keyName', 'X-API-Key')
+        header_prefix = config.get('headerPrefix', '')
 
         if api_key:
             if key_location == 'header':
-                headers[key_name] = api_key
+                full_value = f"{header_prefix} {api_key}".strip() if header_prefix else api_key
+                headers[key_name] = full_value
+            elif key_location == 'query':
+                # For query parameters, we'll handle this in the URL building
+                # Store the parameter for later use
+                if 'query_params' not in config:
+                    config['query_params'] = {}
+                config['query_params'][key_name] = api_key
         return headers
 
     def _prepare_request_data(self, config):
