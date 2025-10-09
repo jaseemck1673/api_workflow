@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-import { Component, useState, onMounted, useRef } from "@odoo/owl";
+import { Component, useState, onMounted, useRef, onWillStart } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { NodeManager } from "./node_manager";
@@ -12,6 +12,8 @@ import { FormManager } from "./form_manager";
 
 class WorkflowBuilder extends Component {
     setup() {
+        console.log('🚀 WorkflowBuilder setup called');
+        console.log('📦 Props received:', this.props);
         this.orm = useService("orm");
         this.notification = useService("notification");
 
@@ -26,6 +28,9 @@ class WorkflowBuilder extends Component {
             connections: [],
             tempConnection: null,
             configUpdateCounter: 0,
+
+            workflowId: this.props?.action?.params?.workflow_id || null,
+            workflowName: this.props?.action?.params?.workflow_name || null,
         });
 
         // Initialize managers
@@ -39,7 +44,43 @@ class WorkflowBuilder extends Component {
             this.setupDragAndDrop();
             this.connectionManager.setupConnections();
             this.setupConfigPanelEvents();
+
+            this.loadWorkflowFromParams();
         });
+
+        // Load workflow data when component starts
+        onWillStart(() => {
+            console.log('🔧 onWillStart - checking for workflow data');
+            this.loadWorkflowFromParams();
+        });
+    }
+
+    loadWorkflowFromParams() {
+        console.log('🔍 Checking for workflow data in props...');
+        console.log('📦 Full props object:', this.props);
+
+        const params = this.props?.action?.params;
+
+        if (params && params.workflow_data) {
+            console.log("📥 Loading saved workflow from backend params:", this.props.workflow_data);
+
+            // Validate the workflow data structure
+            if (this.isValidWorkflowData(params.workflow_data)) {
+                this.workflowIO.importWorkflowData(params.workflow_data);
+                this.state.showInstructions = false;
+                console.log('✅ Workflow data loaded successfully');
+            } else {
+                console.warn('⚠️ Invalid workflow data structure');
+                this.notification.add("Invalid workflow data format", { type: 'warning' });
+            }
+        } else {
+            console.log("ℹ️ No workflow data passed from backend");
+            console.log("Available props keys:", Object.keys(this.props || {}));
+        }
+    }
+
+    isValidWorkflowData(data) {
+        return data && typeof data === 'object' && Array.isArray(data.nodes);
     }
 
     setupDragAndDrop() {
@@ -50,6 +91,7 @@ class WorkflowBuilder extends Component {
             });
         });
     }
+
 
     setupConfigPanelEvents() {
         this.setupConfigEventHandlers();
@@ -503,6 +545,7 @@ class WorkflowBuilder extends Component {
     clearCanvas() { return this.nodeManager.clearCanvas(); }
     testWorkflow() { return this.workflowIO.testWorkflow(); }
     exportWorkflow() { return this.workflowIO.exportWorkflow(); }
+    saveWorkflow() { return this.workflowIO.saveWorkflow(); }
     importWorkflow(event) { return this.workflowIO.importWorkflow(event); }
     getConfigurationTemplate(nodeId) { return this.nodeTemplates.getConfigurationTemplate(nodeId); }
 }

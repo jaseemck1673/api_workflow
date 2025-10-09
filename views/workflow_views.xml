@@ -6,12 +6,21 @@
             <field name="model">api.workflow</field>
             <field name="arch" type="xml">
                 <form string="API Workflow">
+                    <header>
+                        <button name="open_workflow_builder" type="object" string="Open Workflow Builder"
+                                class="btn-primary"/>
+                        <button name="test_workflow_from_record" type="object" string="Test Workflow"
+                                class="btn-secondary"/>
+                        <field name="active" widget="boolean_button" options='{"terminology": "archive"}'/>
+                    </header>
                     <sheet>
                         <group>
                             <field name="name"/>
                             <field name="description"/>
-                            <field name="active"/>
                             <field name="created_date" readonly="1"/>
+                        </group>
+                        <group string="Workflow Data" attr="{'invisible': [('workflow_data', '=', False)]}">
+                            <field name="workflow_data" nolabel="1" readonly="1" style="height: 300px;"/>
                         </group>
                     </sheet>
                 </form>
@@ -27,6 +36,9 @@
                     <field name="description"/>
                     <field name="created_date"/>
                     <field name="active"/>
+                    <button name="open_workflow_builder" type="object" string="Open" class="btn-primary"
+                            confirm="Are you sure you want to open this workflow in the builder?"/>
+                    <button name="test_workflow_from_record" type="object" string="Test" class="btn-secondary"/>
                 </list>
             </field>
         </record>
@@ -37,9 +49,19 @@
             <field name="view_mode">list,form</field>
         </record>
 
+        <!-- Action to open workflow builder -->
+        <record id="action_open_workflow_builder" model="ir.actions.act_window">
+            <field name="name">Workflow Builder</field>
+            <field name="res_model">api.workflow</field>
+            <field name="view_mode">form</field>
+            <field name="target">current</field>
+            <field name="view_id" ref="view_api_workflow_form"/>
+        </record>
+
         <record id="action_workflow_builder" model="ir.actions.client">
             <field name="name">Workflow Builder</field>
             <field name="tag">workflow_builder</field>
+            <field name="params">{}</field>
         </record>
 
     </data>

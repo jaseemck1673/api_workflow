@@ -88,7 +88,7 @@ export class WorkflowIO {
     }
 
     loadWorkflowData(workflowData) {
-        this.workflow.nodeManager.clearCanvas();
+        //this.workflow.nodeManager.clearCanvas();
 
         workflowData.nodes.forEach(nodeData => {
             this.workflow.nodeManager.createWorkflowNode(nodeData.type, nodeData.x, nodeData.y);
@@ -100,5 +100,85 @@ export class WorkflowIO {
         }
 
         this.state.showInstructions = false;
+    }
+
+     async saveWorkflow() {
+        try {
+            console.log("💾 Save workflow triggered");
+
+            const nodes = Object.values(this.state.nodeConfigs);
+            if (nodes.length === 0) {
+                this.showNotification('Cannot save empty workflow', 'warning');
+                return;
+            }
+
+            // Get current workflow_id if editing an existing workflow
+            let existingId = this.state.workflowId;
+            let workflowName = this.state.workflowName;
+
+            if (!existingId) {
+                // Only ask for name if creating a new workflow
+                workflowName = prompt('Enter workflow name:', `Workflow-${new Date().toLocaleDateString()}`);
+                if (!workflowName) return;
+            }
+
+            const workflowData = {
+                id: existingId,  // ✅ Pass ID if updating existing record
+                name: workflowName,
+                description: 'API Workflow created from workflow builder',
+                workflow_data: JSON.stringify({
+                    nodes: nodes,
+                    connections: this.state.connections,
+                    metadata: {
+                        version: "1.0",
+                        exportedAt: new Date().toISOString(),
+                        totalNodes: nodes.length,
+                        totalConnections: this.state.connections.length
+                    }
+                })
+            };
+
+            console.log('📤 Sending workflow data to backend:', workflowData);
+
+            const result = await this.orm.call('api.workflow', 'save_or_update_workflow', [workflowData]);
+
+            if (result) {
+                console.log(result)
+                this.state.workflowId = result;
+                this.showNotification(
+                    existingId
+                        ? `Workflow "${workflowName}" updated successfully!`
+                        : `Workflow "${workflowName}" created successfully!`,
+                    'success'
+                );
+
+                console.log('✅ Workflow saved with ID:', result);
+            }
+
+        } catch (error) {
+            console.error('❌ Error saving workflow:', error);
+            this.showNotification(`Failed to save workflow: ${error.message}`, 'error');
+        }
+    }
+
+    showNotification(message, type = 'info') {
+        // Use Odoo's notification system
+        if (this.env && this.env.services && this.env.services.notification) {
+            this.env.services.notification.add(message, { type });
+        } else {
+            // Fallback
+            alert(`${type.toUpperCase()}: ${message}`);
+        }
+    }
+
+    importWorkflowData(workflowData) {
+        try {
+            console.log('📥 Importing workflow data:', workflowData);
+            this.loadWorkflowData(workflowData);
+            this.notification.add("Workflow loaded successfully!", { type: 'success' });
+        } catch (error) {
+            console.error('❌ Error importing workflow data:', error);
+            this.notification.add("Failed to load workflow data", { type: 'danger' });
+        }
     }
 }

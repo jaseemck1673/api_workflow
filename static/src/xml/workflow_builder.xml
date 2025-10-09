@@ -212,20 +212,20 @@
 
                             <!-- Endpoint Node Config -->
                             <t t-if="nodeConfig.type === 'endpoint'">
-<!--                                <div class="config-section">-->
-<!--                                    <div class="section-title">-->
-<!--                                        <span class="section-icon">🌐</span>-->
-<!--                                        Endpoint Details-->
-<!--                                    </div>-->
-<!--                                    <label class="config-label">API URL Path</label>-->
-<!--                                    <input type="text"-->
-<!--                                           class="config-input"-->
-<!--                                           placeholder="/api/users"-->
-<!--                                           t-att-value="nodeConfig.config.url || ''"-->
-<!--                                           t-on-input="(ev) => this.updateNodeConfig(state.selectedNode,-->
-<!--                                           'url', ev.target.value)"/>-->
-<!--                                    <div class="help-text">The relative path or full URL for the API call.</div>-->
-<!--                                </div>-->
+                                <!--                                <div class="config-section">-->
+                                <!--                                    <div class="section-title">-->
+                                <!--                                        <span class="section-icon">🌐</span>-->
+                                <!--                                        Endpoint Details-->
+                                <!--                                    </div>-->
+                                <!--                                    <label class="config-label">API URL Path</label>-->
+                                <!--                                    <input type="text"-->
+                                <!--                                           class="config-input"-->
+                                <!--                                           placeholder="/api/users"-->
+                                <!--                                           t-att-value="nodeConfig.config.url || ''"-->
+                                <!--                                           t-on-input="(ev) => this.updateNodeConfig(state.selectedNode,-->
+                                <!--                                           'url', ev.target.value)"/>-->
+                                <!--                                    <div class="help-text">The relative path or full URL for the API call.</div>-->
+                                <!--                                </div>-->
 
                                 <div class="config-section">
                                     <div class="section-title">
@@ -260,14 +260,14 @@
 
                                     <!-- Basic Auth Fields -->
                                     <t t-if="nodeConfig.config.authType === 'basic'">
-                                        <label class="config-label">Username</label>
+                                        <label class="config-label">Username / API Key</label>
                                         <input type="text"
                                                class="config-input"
                                                placeholder="user"
                                                t-att-value="nodeConfig.config.username || ''"
                                                t-on-input="(ev) => this.updateNodeConfig(state.selectedNode,'username', ev.target.value)"/>
 
-                                        <label class="config-label">Password</label>
+                                        <label class="config-label">Password / Secret Key</label>
                                         <input type="password"
                                                class="config-input"
                                                placeholder="password"
@@ -346,6 +346,87 @@
                                            t-att-value="nodeConfig.config.timeout || 10000"
                                            t-on-input="(ev) => this.updateNodeConfig('timeout', parseInt(ev.target.value))"/>
                                     <div class="help-text">Time (in milliseconds) before the request is aborted.</div>
+                                </div>
+                                <div class="config-section">
+                                    <div class="section-title">
+                                        <span class="section-icon">🔐</span>
+                                        Authentication Configuration
+                                    </div>
+                                    <label class="config-label">Auth Type</label>
+                                    <select class="config-select"
+                                            t-att-value="nodeConfig.config.authType || 'none'"
+                                            t-on-change="(ev) => this.updateAuthType(state.selectedNode,
+                                             ev.target.value)">
+                                        <option value="none">None</option>
+                                        <option value="basic">Basic Auth</option>
+                                        <option value="bearer">Bearer Token</option>
+                                        <option value="api-key">API Key</option>
+                                    </select>
+
+                                    <!-- Basic Auth Fields -->
+                                    <t t-if="nodeConfig.config.authType === 'basic'">
+                                        <label class="config-label">Username / API Key</label>
+                                        <input type="text"
+                                               class="config-input"
+                                               placeholder="user"
+                                               t-att-value="nodeConfig.config.username || ''"
+                                               t-on-input="(ev) => this.updateNodeConfig(state.selectedNode,'username', ev.target.value)"/>
+
+                                        <label class="config-label">Password / Secret Key</label>
+                                        <input type="password"
+                                               class="config-input"
+                                               placeholder="password"
+                                               t-att-value="nodeConfig.config.password || ''"
+                                               t-on-input="(ev) => this.updateNodeConfig(state.selectedNode,'password', ev.target.value)"/>
+                                    </t>
+
+                                    <!-- Bearer Token Fields -->
+                                    <t t-if="nodeConfig.config.authType === 'bearer'">
+                                        <label class="config-label">Bearer Token</label>
+                                        <input type="text"
+                                               class="config-input"
+                                               placeholder="eyJhbGciOiJIUzI1Ni..."
+                                               t-att-value="nodeConfig.config.token || ''"
+                                               t-on-input="(ev) => this.updateNodeConfig(state.selectedNode,'token', ev.target.value)"/>
+                                    </t>
+
+                                    <!-- API Key Fields -->
+                                    <!-- API Key Fields -->
+                                    <t t-if="nodeConfig.config.authType === 'api-key'">
+                                        <label class="config-label">API Key</label>
+                                        <input type="text"
+                                               class="config-input"
+                                               placeholder="YourSecretKey"
+                                               t-att-value="nodeConfig.config.apiKey || ''"
+                                               t-on-input="(ev) => this.updateNodeConfig(state.selectedNode, 'apiKey', ev.target.value)"/>
+
+                                        <label class="config-label">Key Location</label>
+                                        <select class="config-select"
+                                                t-att-value="nodeConfig.config.keyLocation || 'header'"
+                                                t-on-change="(ev) => this.updateNodeConfig(state.selectedNode, 'keyLocation', ev.target.value)">
+                                            <option value="header">Header</option>
+                                            <option value="query">Query Parameter</option>
+                                        </select>
+
+                                        <!-- API Key Name (Custom Header/Parameter Name) -->
+                                        <label class="config-label">Key Name</label>
+                                        <input type="text"
+                                               class="config-input"
+                                               placeholder="X-API-Key"
+                                               t-att-value="nodeConfig.config.keyName || 'X-API-Key'"
+                                               t-on-input="(ev) => this.updateNodeConfig(state.selectedNode, 'keyName', ev.target.value)"/>
+                                        <div class="help-text">Custom name for the API key (e.g., X-API-Key,
+                                            Authorization, api_key)
+                                        </div>
+                                    </t>
+
+                                    <t t-if="nodeConfig.config.authType === 'none'">
+                                        <div style="font-size: 0.8rem; opacity: 0.8; padding: 10px; text-align: center;">
+                                            No authentication is required.
+                                        </div>
+                                    </t>
+
+                                    <div class="help-text">Configure the security parameters for the API.</div>
                                 </div>
 
                                 <!-- Request Body for POST/PUT -->
@@ -570,14 +651,14 @@
 
                                     <!-- Dynamic Auth Fields -->
                                     <t t-if="nodeConfig.config.authType === 'basic'">
-                                        <label class="config-label">Username</label>
+                                        <label class="config-label">Username / API Key</label>
                                         <input type="text"
                                                class="config-input"
                                                placeholder="user"
                                                t-att-value="nodeConfig.config.username || ''"
                                                t-on-input="(ev) => this.updateNodeConfig('username', ev.target.value)"/>
 
-                                        <label class="config-label">Password</label>
+                                        <label class="config-label">Password / Secret Key</label>
                                         <input type="password"
                                                class="config-input"
                                                placeholder="password"
