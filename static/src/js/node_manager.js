@@ -11,9 +11,14 @@ export class NodeManager {
         this.nodeTemplates = new NodeTemplates(workflowBuilder);
     }
 
-    createWorkflowNode(type, x, y) {
-        const nodeId = `node-${++this.state.nodeIdCounter}`;
+// updating
+    createWorkflowNode(type, x, y, originalId = null) {
+        // Generate node ID - use original ID if provided for imports, otherwise generate new one
+        const nodeId = originalId || `node-${++this.state.nodeIdCounter}`;
 
+        console.log(`🆕 Creating node: ${nodeId} of type: ${type} at (${x}, ${y})`);
+
+        // Create node element
         const nodeElement = document.createElement('div');
         nodeElement.className = 'workflow-node';
         nodeElement.id = nodeId;
@@ -21,6 +26,7 @@ export class NodeManager {
         nodeElement.style.top = `${y}px`;
         nodeElement.dataset.type = type;
 
+        // Create node HTML content (same as original)
         nodeElement.innerHTML = `
             <button class="delete-node" title="Delete node">×</button>
             <div class="connection-point input" @click="startConnection('node-1', true)"></div>
@@ -32,21 +38,62 @@ export class NodeManager {
             <div class="node-status">Click to configure</div>
         `;
 
+        // Append to canvas
         this.canvasRef.el.appendChild(nodeElement);
+
+        // Make draggable and attach events (same as original)
         this.makeNodeDraggable(nodeElement);
         this.attachNodeEvents(nodeElement, nodeId);
 
-        // Store node configuration
-        this.state.nodeConfigs[nodeId] = {
-            id: nodeId,
-            type: type,
-            x: x,
-            y: y,
-            config: this.nodeTemplates.getDefaultConfig(type)
-        };
-        this.state.workflowNodes.push(nodeId);
+        // Enhanced node configuration handling
+        this.initializeNodeConfiguration(nodeId, type, x, y, originalId);
+
+        // Update node status (same as original)
         this.updateNodeStatus(nodeId);
+
+        return nodeId; // Return node ID for external reference
     }
+
+    /**
+     * Enhanced node configuration initialization
+     * Handles both new nodes and imported nodes with existing configurations
+     */
+    initializeNodeConfiguration(nodeId, type, x, y, originalId = null) {
+        // Check if this is an imported node with existing configuration
+        const isImportedNode = originalId !== null;
+
+        if (isImportedNode && this.state.nodeConfigs[nodeId]) {
+            // Node already has configuration from import - just update position
+            console.log(`📋 Using imported configuration for node ${nodeId}:`, this.state.nodeConfigs[nodeId].config);
+            this.state.nodeConfigs[nodeId].x = x;
+            this.state.nodeConfigs[nodeId].y = y;
+        } else if (!this.state.nodeConfigs[nodeId]) {
+            // New node - initialize with default configuration
+            const defaultConfig = this.nodeTemplates.getDefaultConfig(type);
+
+            this.state.nodeConfigs[nodeId] = {
+                id: nodeId,
+                type: type,
+                x: x,
+                y: y,
+                config: defaultConfig
+            };
+
+            console.log(`⚙️ Initialized new node ${nodeId} with default config:`, defaultConfig);
+        } else {
+            // Node exists but might need position update
+            this.state.nodeConfigs[nodeId].x = x;
+            this.state.nodeConfigs[nodeId].y = y;
+            console.log(`📍 Updated position for existing node ${nodeId}`);
+        }
+
+        // Ensure node is in workflowNodes array (avoid duplicates)
+        if (!this.state.workflowNodes.includes(nodeId)) {
+            this.state.workflowNodes.push(nodeId);
+            console.log(`📝 Added node ${nodeId} to workflow nodes array`);
+        }
+    }
+
 
     makeNodeDraggable(node) {
         let isDragging = false;

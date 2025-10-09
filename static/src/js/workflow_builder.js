@@ -96,23 +96,48 @@ class WorkflowBuilder extends Component {
     setupConfigPanelEvents() {
         this.setupConfigEventHandlers();
     }
-
+// update
     setupConfigEventHandlers() {
-        const configPanel = this.configPanelRef.el;
-        if (!configPanel) return;
+        console.log('🔧 Setting up config panel event handlers...');
 
-        // Remove existing event listeners by cloning
-        const oldConfigPanel = configPanel.cloneNode(false);
-        oldConfigPanel.innerHTML = configPanel.innerHTML;
-        configPanel.parentNode.replaceChild(oldConfigPanel, configPanel);
-        this.configPanelRef.el = oldConfigPanel;
+        // Small delay to ensure DOM is updated
+        setTimeout(() => {
+            const configPanel = this.configPanelRef.el;
+            if (!configPanel) {
+                console.warn('⚠️ Config panel not available, retrying...');
+                setTimeout(() => this.setupConfigEventHandlers(), 100);
+                return;
+            }
 
-        // Add event listeners
-        this.setupInputHandlers(oldConfigPanel);
-        this.setupButtonHandlers(oldConfigPanel);
-        this.setupSelectHandlers(oldConfigPanel);
+            // Remove existing event listeners by cloning
+            const oldConfigPanel = configPanel.cloneNode(false);
+            oldConfigPanel.innerHTML = configPanel.innerHTML;
+            configPanel.parentNode.replaceChild(oldConfigPanel, configPanel);
+            this.configPanelRef.el = oldConfigPanel;
 
-        console.log('🔧 Config panel event handlers setup for node:', this.state.selectedNode);
+            // Add event listeners
+            this.setupInputHandlers(oldConfigPanel);
+            this.setupButtonHandlers(oldConfigPanel);
+            this.setupSelectHandlers(oldConfigPanel);
+            this.refreshConfigPanelFields();
+            console.log('✅ Config panel event handlers setup complete');
+
+            // Update any selected node's form fields
+            if (this.state.selectedNode) {
+                this.refreshSelectedNodeForm();
+            }
+        }, 50);
+    }
+
+    refreshSelectedNodeForm() {
+        const nodeId = this.state.selectedNode;
+        if (!nodeId || !this.state.nodeConfigs[nodeId]) return;
+
+        const nodeConfig = this.state.nodeConfigs[nodeId];
+        console.log('🔄 Refreshing form for node:', nodeId, nodeConfig);
+
+        // Force reactivity update
+        this.state.configUpdateCounter++;
     }
 
     setupInputHandlers(container) {
@@ -302,6 +327,11 @@ class WorkflowBuilder extends Component {
         // Update config panel events when node selection changes
         setTimeout(() => {
             this.setupConfigEventHandlers();
+            this.refreshConfigPanelFields();
+
+            if (this.state.nodeConfigs[nodeId] && this.state.nodeConfigs[nodeId].config) {
+                this.state.configUpdateCounter++;
+        }
         }, 100);
     }
 
@@ -538,6 +568,87 @@ class WorkflowBuilder extends Component {
         });
 
         return JSON.stringify(jsonObject, null, 2);
+    }
+
+    //update
+    /**
+ * Refresh all input fields in the config panel with current node values
+ */
+    refreshConfigPanelFields() {
+        console.log('🔄 Refreshing config panel fields...');
+
+        const configPanel = this.configPanelRef.el;
+        if (!configPanel) {
+            console.warn('⚠️ Config panel not available');
+            return;
+        }
+
+        // Update all input fields with current values
+        this.updateInputFields(configPanel);
+        this.updateSelectFields(configPanel);
+        this.updateTextareaFields(configPanel);
+
+        console.log('✅ Config panel fields refreshed');
+    }
+
+    /**
+     * Update input fields with current node configuration
+     */
+    updateInputFields(container) {
+        const inputs = container.querySelectorAll('input[type="text"], input[type="number"], input[type="password"]');
+        inputs.forEach(input => {
+            const key = input.dataset.configKey;
+            if (!key) return;
+
+            const nodeId = this.state.selectedNode;
+            if (nodeId && this.state.nodeConfigs[nodeId]) {
+                const value = this.state.nodeConfigs[nodeId].config[key];
+                if (value !== undefined && value !== null) {
+                    input.value = value;
+                    console.log(`📝 Set input ${key} to:`, value);
+                }
+            }
+        });
+    }
+
+    /**
+     * Update select fields with current node configuration
+     */
+    updateSelectFields(container) {
+        const selects = container.querySelectorAll('select');
+        selects.forEach(select => {
+            const key = select.dataset.configKey;
+            if (!key) return;
+
+            const nodeId = this.state.selectedNode;
+            if (nodeId && this.state.nodeConfigs[nodeId]) {
+                const value = this.state.nodeConfigs[nodeId].config[key];
+                if (value !== undefined && value !== null) {
+                    select.value = value;
+                    console.log(`🔽 Set select ${key} to:`, value);
+                }
+            }
+        });
+    }
+
+    /**
+     * Update textarea fields with current node configuration
+     */
+    updateTextareaFields(container) {
+        const textareas = container.querySelectorAll('textarea');
+        textareas.forEach(textarea => {
+            const key = textarea.dataset.configKey;
+            if (!key) return;
+
+            const nodeId = this.state.selectedNode;
+            if (nodeId && this.state.nodeConfigs[nodeId]) {
+                const value = this.state.nodeConfigs[nodeId].config[key];
+                if (value !== undefined && value !== null) {
+                    textarea.value = value;
+                    console.log(`📄 Set textarea ${key} to:`, value);
+                }
+            }
+        });
     }
 
     // Delegate methods to managers

@@ -63,6 +63,7 @@ class APIWorkflow(models.Model):
                 existing_params = parse_qs(parsed_url.query)
                 merged_params = {**existing_params, **query_params}
                 query_string = urlencode(merged_params, doseq=True)
+                print('urlunparse',parsed_url.scheme,parsed_url.netloc,parsed_url.path,parsed_url.params, query_string,parsed_url.fragment)
 
                 final_url = urlunparse((
                     parsed_url.scheme,
