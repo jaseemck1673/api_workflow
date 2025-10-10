@@ -73,18 +73,15 @@ export class WorkflowIO {
     importWorkflow(event) {
         const file = event.target.files[0];
         if (!file) return;
-
         const reader = new FileReader();
         reader.onload = (e) => {
             try {
                 const workflowData = JSON.parse(e.target.result);
                 this.loadWorkflowData(workflowData);
-
                 // Debug after import - FIXED setTimeout
                 setTimeout(() => {
                     this.debugConfigurations();
                 }, 1000); // Added delay parameter
-
                 this.notification.add("Workflow imported successfully!", { type: 'success' });
             } catch (error) {
                 console.error('❌ Import error:', error);
@@ -92,7 +89,6 @@ export class WorkflowIO {
             }
         };
         reader.readAsText(file);
-
         // Clear the file input
         event.target.value = '';
     }
@@ -113,17 +109,14 @@ export class WorkflowIO {
 
     loadWorkflowData(workflowData) {
         console.log('📥 Loading workflow data:', workflowData);
-
         // Clear existing workflow
         this.workflow.nodeManager.clearCanvas();
-
         // Wait for canvas to be cleared before creating new nodes
             setTimeout(() => {
                 try {
                     // Create nodes
                     if (workflowData.nodes && Array.isArray(workflowData.nodes)) {
                         console.log(`📋 Creating ${workflowData.nodes.length} nodes...`);
-
                         workflowData.nodes.forEach((nodeData, index) => {
                             // Create node with original ID and configuration
                             const nodeId = this.workflow.nodeManager.createWorkflowNode(
@@ -132,7 +125,6 @@ export class WorkflowIO {
                                 nodeData.y || 100 + (index * 20),
                                 nodeData.id // Pass the original ID
                             );
-
                             // Restore node configuration immediately
                             if (nodeData.config && nodeData.id) {
                                 this.workflow.state.nodeConfigs[nodeData.id] = {
@@ -143,17 +135,14 @@ export class WorkflowIO {
                             }
                         });
                     }
-
                     // Restore connections after nodes are created
                     if (workflowData.connections && Array.isArray(workflowData.connections)) {
                         setTimeout(() => {
                             this.workflow.state.connections = [...workflowData.connections];
                             this.workflow.connectionManager.updateConnections();
                             console.log(`✅ Restored ${workflowData.connections.length} connections`);
-
                             // Refresh config panel event handlers after everything is loaded
                             this.workflow.setupConfigEventHandlers();
-
                         }, workflowData.nodes.length * 50 + 100);
                     } else {
                         // Refresh config panel even if no connections
@@ -161,11 +150,8 @@ export class WorkflowIO {
                             this.workflow.setupConfigEventHandlers();
                         }, 500);
                     }
-
                     this.workflow.state.showInstructions = false;
-
                     console.log('✅ Workflow imported successfully');
-
                 } catch (error) {
                     console.error('❌ Error during workflow import:', error);
                     this.notification.add("Error loading workflow data", { type: 'danger' });
@@ -176,23 +162,19 @@ export class WorkflowIO {
     async saveWorkflow() {
             try {
                 console.log("💾 Save workflow triggered");
-
                 const nodes = Object.values(this.state.nodeConfigs);
                 if (nodes.length === 0) {
                     this.showNotification('Cannot save empty workflow', 'warning');
                     return;
                 }
-
                 // Get current workflow_id if editing an existing workflow
                 let existingId = this.state.workflowId;
                 let workflowName = this.state.workflowName;
-
                 if (!existingId) {
                     // Only ask for name if creating a new workflow
                     workflowName = prompt('Enter workflow name:', `Workflow-${new Date().toLocaleDateString()}`);
                     if (!workflowName) return;
                 }
-
                 const workflowData = {
                     id: existingId,  // ✅ Pass ID if updating existing record
                     name: workflowName,
@@ -208,11 +190,8 @@ export class WorkflowIO {
                         }
                     })
                 };
-
                 console.log('📤 Sending workflow data to backend:', workflowData);
-
                 const result = await this.orm.call('api.workflow', 'save_or_update_workflow', [workflowData]);
-
                 if (result) {
                     console.log(result)
                     this.state.workflowId = result;
@@ -222,10 +201,8 @@ export class WorkflowIO {
                             : `Workflow "${workflowName}" created successfully!`,
                         'success'
                     );
-
                     console.log('✅ Workflow saved with ID:', result);
                 }
-
             } catch (error) {
                 console.error('❌ Error saving workflow:', error);
                 this.showNotification(`Failed to save workflow: ${error.message}`, 'error');
