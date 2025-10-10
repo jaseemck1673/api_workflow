@@ -18,6 +18,7 @@ class APIWorkflowTesting(models.AbstractModel):
         Helper to join base URL and path cleanly.
         """
         print('join url', base)
+        print('new')
         if not base:
             return path
         if not path:
