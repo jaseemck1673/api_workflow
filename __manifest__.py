@@ -18,7 +18,7 @@
             'api_workflow/static/src/xml/*',
             'api_workflow/static/src/css/*',
             'api_workflow/static/src/js/*',
-            ],
+        ],
     },
 
     'installable': True,

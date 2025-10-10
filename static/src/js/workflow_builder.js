@@ -1,10 +1,94 @@
 /** @odoo-module **/
 
+<<<<<<< HEAD
 export class NodeTemplates {
     constructor(workflowBuilder) {
         this.workflow = workflowBuilder;
         this.state = workflowBuilder.state;
         this.notification = workflowBuilder.notification;
+=======
+import { Component, useState, onMounted, useRef, onWillStart } from "@odoo/owl";
+import { registry } from "@web/core/registry";
+import { useService } from "@web/core/utils/hooks";
+import { NodeManager } from "./node_manager";
+import { ConnectionManager } from "./connection_manager";
+import { WorkflowIO } from "./workflow_io";
+import { NodeTemplates } from "./node_templates";
+import { FormManager } from "./form_manager";
+
+
+class WorkflowBuilder extends Component {
+    setup() {
+        console.log('🚀 WorkflowBuilder setup called');
+        console.log('📦 Props received:', this.props);
+        this.orm = useService("orm");
+        this.notification = useService("notification");
+
+        this.canvasRef = useRef("canvas");
+        this.configPanelRef = useRef("config-panel");
+        this.state = useState({
+            workflowNodes: [],
+            nodeIdCounter: 0,
+            nodeConfigs: {},
+            selectedNode: null,
+            showInstructions: true,
+            connections: [],
+            tempConnection: null,
+            configUpdateCounter: 0,
+
+            workflowId: this.props?.action?.params?.workflow_id || null,
+            workflowName: this.props?.action?.params?.workflow_name || null,
+        });
+
+        // Initialize managers
+        this.nodeManager = new NodeManager(this);
+        this.connectionManager = new ConnectionManager(this);
+        this.workflowIO = new WorkflowIO(this);
+        this.nodeTemplates = new NodeTemplates(this);
+        this.formManager = new FormManager(this);
+
+        onMounted(() => {
+            this.setupDragAndDrop();
+            this.connectionManager.setupConnections();
+            this.setupConfigPanelEvents();
+
+            this.loadWorkflowFromParams();
+        });
+
+        // Load workflow data when component starts
+        onWillStart(() => {
+            console.log('🔧 onWillStart - checking for workflow data');
+            this.loadWorkflowFromParams();
+        });
+    }
+
+    loadWorkflowFromParams() {
+        console.log('🔍 Checking for workflow data in props...');
+        console.log('📦 Full props object:', this.props);
+
+        const params = this.props?.action?.params;
+
+        if (params && params.workflow_data) {
+            console.log("📥 Loading saved workflow from backend params:", this.props.workflow_data);
+
+            // Validate the workflow data structure
+            if (this.isValidWorkflowData(params.workflow_data)) {
+                this.workflowIO.importWorkflowData(params.workflow_data);
+                this.state.showInstructions = false;
+                console.log('✅ Workflow data loaded successfully');
+            } else {
+                console.warn('⚠️ Invalid workflow data structure');
+                this.notification.add("Invalid workflow data format", { type: 'warning' });
+            }
+        } else {
+            console.log("ℹ️ No workflow data passed from backend");
+            console.log("Available props keys:", Object.keys(this.props || {}));
+        }
+    }
+
+    isValidWorkflowData(data) {
+        return data && typeof data === 'object' && Array.isArray(data.nodes);
+>>>>>>> a9db91d
     }
 
     getNodeTemplate(type) {
@@ -24,6 +108,7 @@ export class NodeTemplates {
         return templates[type] || templates.start;
     }
 
+<<<<<<< HEAD
     getNodeIcon(type) {
         const icons = {
             start: '▶️',
@@ -50,6 +135,54 @@ export class NodeTemplates {
             delete: 'DELETE Request'
         };
         return titles[type] || 'Node';
+=======
+
+    setupConfigPanelEvents() {
+        this.setupConfigEventHandlers();
+    }
+// update
+    setupConfigEventHandlers() {
+        console.log('🔧 Setting up config panel event handlers...');
+
+        // Small delay to ensure DOM is updated
+        setTimeout(() => {
+            const configPanel = this.configPanelRef.el;
+            if (!configPanel) {
+                console.warn('⚠️ Config panel not available, retrying...');
+                setTimeout(() => this.setupConfigEventHandlers(), 100);
+                return;
+            }
+
+            // Remove existing event listeners by cloning
+            const oldConfigPanel = configPanel.cloneNode(false);
+            oldConfigPanel.innerHTML = configPanel.innerHTML;
+            configPanel.parentNode.replaceChild(oldConfigPanel, configPanel);
+            this.configPanelRef.el = oldConfigPanel;
+
+            // Add event listeners
+            this.setupInputHandlers(oldConfigPanel);
+            this.setupButtonHandlers(oldConfigPanel);
+            this.setupSelectHandlers(oldConfigPanel);
+            this.refreshConfigPanelFields();
+            console.log('✅ Config panel event handlers setup complete');
+
+            // Update any selected node's form fields
+            if (this.state.selectedNode) {
+                this.refreshSelectedNodeForm();
+            }
+        }, 50);
+    }
+
+    refreshSelectedNodeForm() {
+        const nodeId = this.state.selectedNode;
+        if (!nodeId || !this.state.nodeConfigs[nodeId]) return;
+
+        const nodeConfig = this.state.nodeConfigs[nodeId];
+        console.log('🔄 Refreshing form for node:', nodeId, nodeConfig);
+
+        // Force reactivity update
+        this.state.configUpdateCounter++;
+>>>>>>> a9db91d
     }
 
     getDefaultConfig(type) {
@@ -79,8 +212,21 @@ export class NodeTemplates {
         console.log('🎨 Generating config template for node:', nodeId);
         console.log('📊 Current config:', nodeConfig.config);
 
+<<<<<<< HEAD
         const type = nodeConfig.type;
         let html = '';
+=======
+        // Update config panel events when node selection changes
+        setTimeout(() => {
+            this.setupConfigEventHandlers();
+            this.refreshConfigPanelFields();
+
+            if (this.state.nodeConfigs[nodeId] && this.state.nodeConfigs[nodeId].config) {
+                this.state.configUpdateCounter++;
+        }
+        }, 100);
+    }
+>>>>>>> a9db91d
 
         switch (type) {
             case 'start':
@@ -115,6 +261,7 @@ export class NodeTemplates {
         return html;
     }
 
+<<<<<<< HEAD
     getStartConfiguration(nodeId) {
         return `
             <div class="config-section">
@@ -419,6 +566,39 @@ export class NodeTemplates {
 
         this.workflow.nodeManager.updateNodeStatus(nodeId);
         this.workflow.state.configUpdateCounter++;
+=======
+    // Add the missing methods that are called from templates
+   updateAuthType(nodeId, authType) {
+        const nodeConfig = this.state.nodeConfigs[nodeId];
+        if (!nodeConfig) return;
+
+        console.log('🔄 Updating auth type for node:', nodeId, 'to:', authType);
+
+        // Update the authType
+        nodeConfig.config.authType = authType;
+
+        // Reset all auth fields
+        const authFields = ['username', 'password', 'token', 'apiKey', 'keyLocation',  'keyName', 'headerPrefix'];
+        authFields.forEach(field => {
+            if (nodeConfig.config[field] !== undefined) {
+                // Set default values for API key fields
+                if (field === 'keyName' && authType === 'api-key') {
+                    nodeConfig.config[field] = 'X-API-Key';
+                } else if (field === 'keyLocation' && authType === 'api-key') {
+                    nodeConfig.config[field] = 'header';
+                } else if (field === 'headerPrefix' && authType === 'api-key') {
+                    nodeConfig.config[field] = '';
+                } else {
+                    nodeConfig.config[field] = '';
+                }
+            }
+        });
+
+        // Force reactivity update - DO NOT call updateState() as it doesn't exist
+        this.state.configUpdateCounter++;
+
+        console.log('✅ Auth type updated successfully');
+>>>>>>> a9db91d
     }
 
     removeParam(nodeId, paramType, index) {
@@ -518,6 +698,263 @@ export class NodeTemplates {
         const nodeConfig = this.state.nodeConfigs[nodeId];
         return nodeConfig && nodeConfig.config.params ? nodeConfig.config.params : [];
     }
+<<<<<<< HEAD
+=======
+
+    get selectedNodeConfig() {
+        return this.state.selectedNode ? this.state.nodeConfigs[this.state.selectedNode] : null;
+    }
+
+    // Debug method to check all node configs
+    debugNodeConfigs() {
+        console.log('🐛 All Node Configs:', this.state.nodeConfigs);
+        return this.state.nodeConfigs;
+    }
+
+    // Add these methods to the WorkflowBuilder class
+
+    updateBodyType(bodyType) {
+        const nodeId = this.state.selectedNode;
+        if (nodeId) {
+            this.formManager.updateBodyType(bodyType);
+        }
+
+        console.log('🔄 Updating body type to:', bodyType);
+
+        // Update body type
+        this.updateNodeConfig('bodyType', bodyType);
+
+        const nodeConfig = this.state.nodeConfigs[nodeId];
+
+        // Initialize formFields if switching to form mode
+        if (bodyType === 'form' && (!nodeConfig.config.formFields || !Array.isArray(nodeConfig.config.formFields))) {
+            this.updateNodeConfig('formFields', []);
+        }
+
+        // Convert existing JSON to form fields if available and switching to form mode
+        if (bodyType === 'form' && nodeConfig.config.body) {
+            this.convertJsonToForm();
+        }
+    }
+
+    addFormField() {
+        const nodeId = this.state.selectedNode;
+        if (!nodeId) return;
+
+        const nodeConfig = this.state.nodeConfigs[nodeId];
+        if (!nodeConfig.config.formFields) {
+            nodeConfig.config.formFields = [];
+        }
+
+        // Add new empty field
+        nodeConfig.config.formFields.push({
+            key: '',
+            value: ''
+        });
+
+        console.log('➕ Added form field. Total fields:', nodeConfig.config.formFields.length);
+        this.state.configUpdateCounter++;
+    }
+
+    updateFormField(index, fieldType, value) {
+        const nodeId = this.state.selectedNode;
+        if (!nodeId) return;
+
+        const nodeConfig = this.state.nodeConfigs[nodeId];
+        if (nodeConfig.config.formFields && nodeConfig.config.formFields[index]) {
+            nodeConfig.config.formFields[index][fieldType] = value;
+            console.log('✏️ Updated form field:', { index, fieldType, value });
+            this.state.configUpdateCounter++;
+        }
+    }
+
+    removeFormField(index) {
+        const nodeId = this.state.selectedNode;
+        if (!nodeId) return;
+
+        const nodeConfig = this.state.nodeConfigs[nodeId];
+        if (nodeConfig.config.formFields && nodeConfig.config.formFields.length > index) {
+            nodeConfig.config.formFields.splice(index, 1);
+            console.log('🗑️ Removed form field at index:', index);
+            this.state.configUpdateCounter++;
+        }
+    }
+
+    convertFormToJson() {
+        const nodeId = this.state.selectedNode;
+        if (!nodeId) return;
+
+        const nodeConfig = this.state.nodeConfigs[nodeId];
+        if (!nodeConfig.config.formFields) return;
+
+        // Generate JSON from form fields
+        const jsonObject = {};
+        nodeConfig.config.formFields.forEach(field => {
+            if (field.key && field.key.trim() !== '') {
+                // Try to parse value as JSON, otherwise use as string
+                try {
+                    jsonObject[field.key] = JSON.parse(field.value);
+                } catch (e) {
+                    jsonObject[field.key] = field.value;
+                }
+            }
+        });
+
+        const jsonString = JSON.stringify(jsonObject, null, 2);
+        this.updateNodeConfig('body', jsonString);
+        this.updateNodeConfig('bodyType', 'json');
+
+        console.log('📄 Converted form to JSON:', jsonString);
+        this.notification.add("Form data converted to JSON!", { type: 'success' });
+    }
+
+    convertJsonToForm() {
+        const nodeId = this.state.selectedNode;
+        if (!nodeId) return;
+
+        const nodeConfig = this.state.nodeConfigs[nodeId];
+        if (!nodeConfig.config.body) return;
+
+        try {
+            const jsonObject = JSON.parse(nodeConfig.config.body);
+            const formFields = [];
+
+            // Convert JSON object to form fields
+            Object.entries(jsonObject).forEach(([key, value]) => {
+                formFields.push({
+                    key: key,
+                    value: typeof value === 'object' ? JSON.stringify(value) : String(value)
+                });
+            });
+
+            this.updateNodeConfig('formFields', formFields);
+            console.log('📋 Converted JSON to form fields:', formFields);
+            this.notification.add("JSON converted to form data!", { type: 'success' });
+        } catch (error) {
+            console.error('❌ Error parsing JSON:', error);
+            this.notification.add("Invalid JSON format", { type: 'danger' });
+        }
+    }
+
+    generateJsonFromForm(formFields) {
+        if (!formFields || !Array.isArray(formFields)) {
+            return '{}';
+        }
+
+        const jsonObject = {};
+        formFields.forEach(field => {
+            if (field.key && field.key.trim() !== '') {
+                // Try to parse value as JSON, otherwise use as string
+                try {
+                    jsonObject[field.key] = JSON.parse(field.value);
+                } catch (e) {
+                    jsonObject[field.key] = field.value;
+                }
+            }
+        });
+
+        return JSON.stringify(jsonObject, null, 2);
+    }
+
+    //update
+    /**
+ * Refresh all input fields in the config panel with current node values
+ */
+    refreshConfigPanelFields() {
+        console.log('🔄 Refreshing config panel fields...');
+
+        const configPanel = this.configPanelRef.el;
+        if (!configPanel) {
+            console.warn('⚠️ Config panel not available');
+            return;
+        }
+
+        // Update all input fields with current values
+        this.updateInputFields(configPanel);
+        this.updateSelectFields(configPanel);
+        this.updateTextareaFields(configPanel);
+
+        console.log('✅ Config panel fields refreshed');
+    }
+
+    /**
+     * Update input fields with current node configuration
+     */
+    updateInputFields(container) {
+        const inputs = container.querySelectorAll('input[type="text"], input[type="number"], input[type="password"]');
+        inputs.forEach(input => {
+            const key = input.dataset.configKey;
+            if (!key) return;
+
+            const nodeId = this.state.selectedNode;
+            if (nodeId && this.state.nodeConfigs[nodeId]) {
+                const value = this.state.nodeConfigs[nodeId].config[key];
+                if (value !== undefined && value !== null) {
+                    input.value = value;
+                    console.log(`📝 Set input ${key} to:`, value);
+                }
+            }
+        });
+    }
+
+    /**
+     * Update select fields with current node configuration
+     */
+    updateSelectFields(container) {
+        const selects = container.querySelectorAll('select');
+        selects.forEach(select => {
+            const key = select.dataset.configKey;
+            if (!key) return;
+
+            const nodeId = this.state.selectedNode;
+            if (nodeId && this.state.nodeConfigs[nodeId]) {
+                const value = this.state.nodeConfigs[nodeId].config[key];
+                if (value !== undefined && value !== null) {
+                    select.value = value;
+                    console.log(`🔽 Set select ${key} to:`, value);
+                }
+            }
+        });
+    }
+
+    /**
+     * Update textarea fields with current node configuration
+     */
+    updateTextareaFields(container) {
+        const textareas = container.querySelectorAll('textarea');
+        textareas.forEach(textarea => {
+            const key = textarea.dataset.configKey;
+            if (!key) return;
+
+            const nodeId = this.state.selectedNode;
+            if (nodeId && this.state.nodeConfigs[nodeId]) {
+                const value = this.state.nodeConfigs[nodeId].config[key];
+                if (value !== undefined && value !== null) {
+                    textarea.value = value;
+                    console.log(`📄 Set textarea ${key} to:`, value);
+                }
+            }
+        });
+    }
+
+    // Delegate methods to managers
+     updateBodyType(bodyType) { this.formManager.updateBodyType(bodyType); }
+    addFormField() { this.formManager.addFormField(); }
+    updateFormField(index, fieldType, value) { this.formManager.updateFormField(index, fieldType, value); }
+    removeFormField(index) { this.formManager.removeFormField(index); }
+    clearAllFormFields() { this.formManager.clearAllFormFields(); }
+    convertFormToJson() { this.formManager.convertFormToJson(); }
+    convertJsonToForm() { this.formManager.convertJsonToForm(); }
+    generateJsonFromForm(formFields) { return this.formManager.generateJsonFromForm(formFields); }
+
+    //========================
+    clearCanvas() { return this.nodeManager.clearCanvas(); }
+    testWorkflow() { return this.workflowIO.testWorkflow(); }
+    exportWorkflow() { return this.workflowIO.exportWorkflow(); }
+    saveWorkflow() { return this.workflowIO.saveWorkflow(); }
+    importWorkflow(event) { return this.workflowIO.importWorkflow(event); }
+    getConfigurationTemplate(nodeId) { return this.nodeTemplates.getConfigurationTemplate(nodeId); }
+>>>>>>> a9db91d
 }
 
 registry.category("actions").add("workflow_builder", WorkflowBuilder);

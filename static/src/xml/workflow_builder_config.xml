@@ -1,0 +1,842 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <t t-name="api_workflow_builder.WorkflowBuilderConfig">
+        <div class="config-panel">
+            <div class="config-header">
+                <div class="config-title">⚙️ Node Settings</div>
+                <div class="config-subtitle">Select a node to configure its parameters</div>
+            </div>
+
+            <div class="config-content">
+                <t t-if="state.selectedNode">
+                    <t t-set="nodeConfig" t-value="state.nodeConfigs[state.selectedNode]"/>
+                    <t t-if="nodeConfig">
+                        <!-- Start Node Config -->
+                        <t t-if="nodeConfig.type === 'start'">
+                            <div class="config-section">
+                                <div class="section-title">
+                                    <span class="section-icon">▶️</span>
+                                    Start Configuration
+                                </div>
+                                <div class="help-text">This is the entry point of your workflow. No configuration
+                                    needed here, but the node must be present.
+                                </div>
+                                <div style="text-align: center; padding: 20px; background: rgba(40, 167, 69, 0.1); border-radius: 6px; color: #28a745;">
+                                    ✅ Workflow starts here
+                                </div>
+                            </div>
+                        </t>
+
+                        <!-- End Node Config -->
+                        <t t-if="nodeConfig.type === 'end'">
+                            <div class="config-section">
+                                <div class="section-title">
+                                    <span class="section-icon">🏁</span>
+                                    End Configuration
+                                </div>
+                                <div class="help-text">This marks the final node in your workflow chain.</div>
+                                <div style="text-align: center; padding: 20px; background: rgba(220,53,69,0.1); border-radius: 6px; color: #dc3545;">
+                                    🛑 Workflow ends here
+                                </div>
+                            </div>
+                        </t>
+
+                        <!-- Endpoint Node Config -->
+                        <t t-if="nodeConfig.type === 'endpoint'">
+                            <div class="config-section">
+                                <div class="section-title">
+                                    <span class="section-icon">🗄️</span>
+                                    Base API Setup
+                                </div>
+                                <label class="config-label">Base API URL</label>
+                                <input type="text"
+                                       class="config-input"
+                                       placeholder="https://api.example.com"
+                                       t-att-value="nodeConfig.config.baseUrl || ''"
+                                       t-on-input="(ev) => this.updateNodeConfig(state.selectedNode,'baseUrl', ev.target.value)"/>
+                                <div class="help-text">The common base URL for all API calls in the workflow.</div>
+                            </div>
+
+                            <!-- Authentication Configuration -->
+                            <div class="config-section">
+                                <div class="section-title">
+                                    <span class="section-icon">🔐</span>
+                                    Authentication Configuration
+                                </div>
+                                <label class="config-label">Auth Type</label>
+                                <select class="config-select"
+                                        t-att-value="nodeConfig.config.authType || 'none'"
+                                        t-on-change="(ev) => this.updateAuthType(state.selectedNode,
+                                         ev.target.value)">
+                                    <option value="none">None</option>
+                                    <option value="basic">Basic Auth</option>
+                                    <option value="bearer">Bearer Token</option>
+                                    <option value="api-key">API Key</option>
+                                </select>
+
+                                <!-- Basic Auth Fields -->
+                                <t t-if="nodeConfig.config.authType === 'basic'">
+                                    <div class="auth-config-container">
+                                        <!-- Authentication Method Selection -->
+                                        <div class="config-section">
+                                            <h4 class="config-section-title">Authentication Type</h4>
+                                            <div class="radio-group">
+                                                <label class="radio-option">
+                                                    <input type="radio"
+                                                           class="form-radio"
+                                                           name="basicAuthType"
+                                                           value="username-password"
+                                                           t-att-checked="nodeConfig.config.basicAuthMethod !== 'api-key-secret'"
+                                                           t-on-change="(ev) => this.updateNodeConfig(state.selectedNode, 'basicAuthMethod', 'username-password')"/>
+                                                    <span class="radio-label">Username &amp; Password</span>
+                                                </label>
+                                                <label class="radio-option">
+                                                    <input type="radio"
+                                                           class="form-radio"
+                                                           name="basicAuthType"
+                                                           value="api-key-secret"
+                                                           t-att-checked="nodeConfig.config.basicAuthMethod === 'api-key-secret'"
+                                                           t-on-change="(ev) => this.updateNodeConfig(state.selectedNode, 'basicAuthMethod', 'api-key-secret')"/>
+                                                    <span class="radio-label">API Key &amp; Secret</span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <!-- Username &amp; Password Configuration -->
+                                        <t t-if="nodeConfig.config.basicAuthMethod !== 'api-key-secret'">
+                                            <div class="config-section">
+                                                <h4 class="config-section-title">Credentials</h4>
+                                                <div class="credentials-grid">
+                                                    <div class="input-group">
+                                                        <label class="config-label">Username</label>
+                                                        <input type="text"
+                                                               class="config-input"
+                                                               placeholder="Enter username"
+                                                               t-att-value="nodeConfig.config.username || ''"
+                                                               t-on-input="(ev) => this.updateNodeConfig(state.selectedNode,'username', ev.target.value)"/>
+                                                    </div>
+                                                    <div class="input-group">
+                                                        <label class="config-label">Password</label>
+                                                        <input type="password"
+                                                               class="config-input"
+                                                               placeholder="Enter password"
+                                                               t-att-value="nodeConfig.config.password || ''"
+                                                               t-on-input="(ev) => this.updateNodeConfig(state.selectedNode,'password', ev.target.value)"/>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </t>
+
+                                        <!-- API Key &amp; Secret Configuration -->
+                                        <t t-if="nodeConfig.config.basicAuthMethod === 'api-key-secret'">
+                                            <div class="config-section">
+                                                <h4 class="config-section-title">API Credentials</h4>
+                                                <div class="credentials-grid">
+                                                    <div class="input-group">
+                                                        <label class="config-label">API Key</label>
+                                                        <input type="text"
+                                                               class="config-input"
+                                                               placeholder="Enter API key"
+                                                               t-att-value="nodeConfig.config.apiKey || ''"
+                                                               t-on-input="(ev) => this.updateNodeConfig(state.selectedNode,'apiKey', ev.target.value)"/>
+                                                    </div>
+                                                    <div class="input-group">
+                                                        <label class="config-label">Secret Key</label>
+                                                        <input type="password"
+                                                               class="config-input"
+                                                               placeholder="Enter secret key"
+                                                               t-att-value="nodeConfig.config.secretKey || ''"
+                                                               t-on-input="(ev) => this.updateNodeConfig(state.selectedNode,'secretKey', ev.target.value)"/>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Key Placement Configuration -->
+                                            <div class="config-section">
+                                                <h4 class="config-section-title">Key Placement</h4>
+                                                <div class="input-group">
+                                                    <label class="config-label">Location</label>
+                                                    <select class="config-select"
+                                                            t-att-value="nodeConfig.config.keyLocation || 'header'"
+                                                            t-on-change="(ev) => this.updateNodeConfig(state.selectedNode, 'keyLocation', ev.target.value)">
+                                                        <option value="header">HTTP Header</option>
+                                                        <option value="query">Query Parameter</option>
+                                                        <option value="basic-auth">Basic Authentication</option>
+                                                    </select>
+                                                    <div class="help-text">
+                                                        <t t-if="nodeConfig.config.keyLocation === 'header'">
+                                                            API key will be sent in the request headers
+                                                        </t>
+                                                        <t t-if="nodeConfig.config.keyLocation === 'query'">
+                                                            API key will be added as a URL query parameter
+                                                        </t>
+                                                        <t t-if="nodeConfig.config.keyLocation === 'basic-auth'">
+                                                            API key as username, Secret as password in Basic Auth
+                                                        </t>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Custom Field Name Configuration -->
+                                                <t t-if="nodeConfig.config.keyLocation !== 'basic-auth'">
+                                                    <div class="input-group">
+                                                        <label class="config-label">
+                                                            <t t-if="nodeConfig.config.keyLocation === 'header'">
+                                                                Header Name
+                                                            </t>
+                                                            <t t-if="nodeConfig.config.keyLocation === 'query'">
+                                                                Parameter Name
+                                                            </t>
+                                                        </label>
+                                                        <input type="text"
+                                                               class="config-input"
+                                                               t-att-placeholder="nodeConfig.config.keyLocation === 'header' ? 'X-API-Key' : 'api_key'"
+                                                               t-att-value="nodeConfig.config.keyName || (nodeConfig.config.keyLocation === 'header' ? 'X-API-Key' : 'api_key')"
+                                                               t-on-input="(ev) => this.updateNodeConfig(state.selectedNode,'keyName', ev.target.value)"/>
+                                                        <div class="help-text">
+                                                            Customize the field name used in the
+                                                            <t t-esc="nodeConfig.config.keyLocation"/>
+                                                        </div>
+                                                    </div>
+                                                </t>
+                                            </div>
+                                        </t>
+                                    </div>
+                                </t>
+
+                                <!-- Bearer Token Fields -->
+                                <t t-if="nodeConfig.config.authType === 'bearer'">
+                                    <label class="config-label">Bearer Token</label>
+                                    <input type="text"
+                                           class="config-input"
+                                           placeholder="eyJhbGciOiJIUzI1Ni..."
+                                           t-att-value="nodeConfig.config.token || ''"
+                                           t-on-input="(ev) => this.updateNodeConfig(state.selectedNode,'token', ev.target.value)"/>
+                                </t>
+
+                                <!-- API Key Fields -->
+                                <t t-if="nodeConfig.config.authType === 'api-key'">
+                                    <label class="config-label">API Key</label>
+                                    <input type="text"
+                                           class="config-input"
+                                           placeholder="YourSecretKey"
+                                           t-att-value="nodeConfig.config.apiKey || ''"
+                                           t-on-input="(ev) => this.updateNodeConfig(state.selectedNode, 'apiKey', ev.target.value)"/>
+
+                                    <label class="config-label">Key Location</label>
+                                    <select class="config-select"
+                                            t-att-value="nodeConfig.config.keyLocation || 'header'"
+                                            t-on-change="(ev) => this.updateNodeConfig(state.selectedNode,'keyLocation','authType',
+                                             ev.target.value)">
+                                        <option value="header">Header</option>
+                                        <option value="query">Query Parameter</option>
+                                    </select>
+                                </t>
+
+                                <t t-if="nodeConfig.config.authType === 'none'">
+                                    <div style="font-size: 0.8rem; opacity: 0.8; padding: 10px; text-align: center;">
+                                        No authentication is required.
+                                    </div>
+                                </t>
+
+                                <div class="help-text">Configure the security parameters for the API.</div>
+                            </div>
+                        </t>
+
+                        <!-- HTTP Methods Configuration (GET, POST, PUT, DELETE) -->
+                        <t t-if="['get', 'post', 'put', 'delete'].includes(nodeConfig.type)">
+                            <div class="config-section">
+                                <div class="section-title">
+                                    <span class="section-icon">🌐</span>
+                                    Endpoint Details
+                                </div>
+                                <label class="config-label">API URL Path</label>
+                                <input type="text"
+                                       class="config-input"
+                                       placeholder="/api/users"
+                                       t-att-value="nodeConfig.config.url || ''"
+                                       t-on-input="(ev) => this.updateNodeConfig(state.selectedNode, 'url', ev.target.value)"/>
+                                <div class="help-text">The relative path or full URL for the API call.</div>
+                            </div>
+
+                            <div class="config-section">
+                                <div class="section-title">
+                                    <span class="section-icon">📡</span>
+                                    Request Details
+                                </div>
+                                <label class="config-label">HTTP Method</label>
+                                <div style="font-size: 1.5rem; font-weight: bold; color: #00f2fe; text-align: center; padding: 10px; background: rgba(0,242,254,0.1); border-radius: 6px;">
+                                    <t t-esc="nodeConfig.type.toUpperCase()"/>
+                                </div>
+                                <label class="config-label" style="margin-top: 12px;">Timeout (ms)</label>
+                                <input type="number"
+                                       class="config-input"
+                                       placeholder="10000"
+                                       t-att-value="nodeConfig.config.timeout || 10000"
+                                       t-on-input="(ev) => this.updateNodeConfig('timeout', parseInt(ev.target.value))"/>
+                                <div class="help-text">Time (in milliseconds) before the request is aborted.</div>
+                            </div>
+                            <div class="config-section">
+                                <div class="section-title">
+                                    <span class="section-icon">🔐</span>
+                                    Authentication Configuration
+                                </div>
+                                <label class="config-label">Auth Type</label>
+                                <select class="config-select"
+                                        t-att-value="nodeConfig.config.authType || 'none'"
+                                        t-on-change="(ev) => this.updateAuthType(state.selectedNode,
+                                         ev.target.value)">
+                                    <option value="none">None</option>
+                                    <option value="basic">Basic Auth</option>
+                                    <option value="bearer">Bearer Token</option>
+                                    <option value="api-key">API Key</option>
+                                </select>
+
+                                <!-- Basic Auth Fields -->
+                                <t t-if="nodeConfig.config.authType === 'basic'">
+                                    <div class="auth-config-container">
+                                        <!-- Authentication Method Selection -->
+                                        <div class="config-section">
+                                            <h4 class="config-section-title">Authentication Type</h4>
+                                            <div class="radio-group">
+                                                <label class="radio-option">
+                                                    <input type="radio"
+                                                           class="form-radio"
+                                                           name="basicAuthType"
+                                                           value="username-password"
+                                                           t-att-checked="nodeConfig.config.basicAuthMethod !== 'api-key-secret'"
+                                                           t-on-change="(ev) => this.updateNodeConfig(state.selectedNode, 'basicAuthMethod', 'username-password')"/>
+                                                    <span class="radio-label">Username &amp; Password</span>
+                                                </label>
+                                                <label class="radio-option">
+                                                    <input type="radio"
+                                                           class="form-radio"
+                                                           name="basicAuthType"
+                                                           value="api-key-secret"
+                                                           t-att-checked="nodeConfig.config.basicAuthMethod === 'api-key-secret'"
+                                                           t-on-change="(ev) => this.updateNodeConfig(state.selectedNode, 'basicAuthMethod', 'api-key-secret')"/>
+                                                    <span class="radio-label">API Key &amp; Secret</span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <!-- Username &amp; Password Configuration -->
+                                        <t t-if="nodeConfig.config.basicAuthMethod !== 'api-key-secret'">
+                                            <div class="config-section">
+                                                <h4 class="config-section-title">Credentials</h4>
+                                                <div class="credentials-grid">
+                                                    <div class="input-group">
+                                                        <label class="config-label">Username</label>
+                                                        <input type="text"
+                                                               class="config-input"
+                                                               placeholder="Enter username"
+                                                               t-att-value="nodeConfig.config.username || ''"
+                                                               t-on-input="(ev) => this.updateNodeConfig(state.selectedNode,'username', ev.target.value)"/>
+                                                    </div>
+                                                    <div class="input-group">
+                                                        <label class="config-label">Password</label>
+                                                        <input type="password"
+                                                               class="config-input"
+                                                               placeholder="Enter password"
+                                                               t-att-value="nodeConfig.config.password || ''"
+                                                               t-on-input="(ev) => this.updateNodeConfig(state.selectedNode,'password', ev.target.value)"/>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </t>
+
+                                        <!-- API Key &amp; Secret Configuration -->
+                                        <t t-if="nodeConfig.config.basicAuthMethod === 'api-key-secret'">
+                                            <div class="config-section">
+                                                <h4 class="config-section-title">API Credentials</h4>
+                                                <div class="credentials-grid">
+                                                    <div class="input-group">
+                                                        <label class="config-label">API Key</label>
+                                                        <input type="text"
+                                                               class="config-input"
+                                                               placeholder="Enter API key"
+                                                               t-att-value="nodeConfig.config.apiKey || ''"
+                                                               t-on-input="(ev) => this.updateNodeConfig(state.selectedNode,'apiKey', ev.target.value)"/>
+                                                    </div>
+                                                    <div class="input-group">
+                                                        <label class="config-label">Secret Key</label>
+                                                        <input type="password"
+                                                               class="config-input"
+                                                               placeholder="Enter secret key"
+                                                               t-att-value="nodeConfig.config.secretKey || ''"
+                                                               t-on-input="(ev) => this.updateNodeConfig(state.selectedNode,'secretKey', ev.target.value)"/>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Key Placement Configuration -->
+                                            <div class="config-section">
+                                                <h4 class="config-section-title">Key Placement</h4>
+                                                <div class="input-group">
+                                                    <label class="config-label">Location</label>
+                                                    <select class="config-select"
+                                                            t-att-value="nodeConfig.config.keyLocation || 'header'"
+                                                            t-on-change="(ev) => this.updateNodeConfig(state.selectedNode, 'keyLocation', ev.target.value)">
+                                                        <option value="header">HTTP Header</option>
+                                                        <option value="query">Query Parameter</option>
+                                                        <option value="basic-auth">Basic Authentication</option>
+                                                    </select>
+                                                    <div class="help-text">
+                                                        <t t-if="nodeConfig.config.keyLocation === 'header'">
+                                                            API key will be sent in the request headers
+                                                        </t>
+                                                        <t t-if="nodeConfig.config.keyLocation === 'query'">
+                                                            API key will be added as a URL query parameter
+                                                        </t>
+                                                        <t t-if="nodeConfig.config.keyLocation === 'basic-auth'">
+                                                            API key as username, Secret as password in Basic Auth
+                                                        </t>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Custom Field Name Configuration -->
+                                                <t t-if="nodeConfig.config.keyLocation !== 'basic-auth'">
+                                                    <div class="input-group">
+                                                        <label class="config-label">
+                                                            <t t-if="nodeConfig.config.keyLocation === 'header'">Header Name</t>
+                                                            <t t-if="nodeConfig.config.keyLocation === 'query'">Parameter Name</t>
+                                                        </label>
+                                                        <input type="text"
+                                                               class="config-input"
+                                                               t-att-placeholder="nodeConfig.config.keyLocation === 'header' ? 'X-API-Key' : 'api_key'"
+                                                               t-att-value="nodeConfig.config.keyName || (nodeConfig.config.keyLocation === 'header' ? 'X-API-Key' : 'api_key')"
+                                                               t-on-input="(ev) => this.updateNodeConfig(state.selectedNode,'keyName', ev.target.value)"/>
+                                                        <div class="help-text">
+                                                            Customize the field name used in the <t t-esc="nodeConfig.config.keyLocation"/>
+                                                        </div>
+                                                    </div>
+                                                </t>
+                                            </div>
+                                        </t>
+                                    </div>
+                                </t>
+
+                                <!-- Bearer Token Fields -->
+                                <t t-if="nodeConfig.config.authType === 'bearer'">
+                                    <label class="config-label">Bearer Token</label>
+                                    <input type="text"
+                                           class="config-input"
+                                           placeholder="eyJhbGciOiJIUzI1Ni..."
+                                           t-att-value="nodeConfig.config.token || ''"
+                                           t-on-input="(ev) => this.updateNodeConfig(state.selectedNode,'token', ev.target.value)"/>
+                                </t>
+
+                                <!-- API Key Fields -->
+                                <t t-if="nodeConfig.config.authType === 'api-key'">
+                                    <label class="config-label">API Key</label>
+                                    <input type="text"
+                                           class="config-input"
+                                           placeholder="YourSecretKey"
+                                           t-att-value="nodeConfig.config.apiKey || ''"
+                                           t-on-input="(ev) => this.updateNodeConfig(state.selectedNode, 'apiKey', ev.target.value)"/>
+
+                                    <label class="config-label">Key Location</label>
+                                    <select class="config-select"
+                                            t-att-value="nodeConfig.config.keyLocation || 'header'"
+                                            t-on-change="(ev) => this.updateNodeConfig(state.selectedNode, 'keyLocation', ev.target.value)">
+                                        <option value="header">Header</option>
+                                        <option value="query">Query Parameter</option>
+                                    </select>
+
+                                    <!-- API Key Name (Custom Header/Parameter Name) -->
+                                    <label class="config-label">Key Name</label>
+                                    <input type="text"
+                                           class="config-input"
+                                           placeholder="X-API-Key"
+                                           t-att-value="nodeConfig.config.keyName || 'X-API-Key'"
+                                           t-on-input="(ev) => this.updateNodeConfig(state.selectedNode, 'keyName', ev.target.value)"/>
+                                    <div class="help-text">Custom name for the API key (e.g., X-API-Key,
+                                        Authorization, api_key)
+                                    </div>
+                                </t>
+
+                                <t t-if="nodeConfig.config.authType === 'none'">
+                                    <div style="font-size: 0.8rem; opacity: 0.8; padding: 10px; text-align: center;">
+                                        No authentication is required.
+                                    </div>
+                                </t>
+
+                                <div class="help-text">Configure the security parameters for the API.</div>
+                            </div>
+
+                            <!-- Request Body for POST/PUT -->
+                            <t t-if="nodeConfig.type === 'post' or nodeConfig.type === 'put'">
+                                <div class="config-section">
+                                    <div class="section-title">
+                                        <span class="section-icon">📝</span>
+                                        Request Body
+                                    </div>
+
+                                    <!-- Body Type Selection -->
+                                    <div class="config-section">
+                                        <div class="section-title">
+                                            <span class="section-icon">🔘</span>
+                                            Body Format
+                                        </div>
+                                        <label class="config-label">Body Type</label>
+                                        <div class="body-type-selector">
+                                            <label class="radio-label">
+                                                <input type="radio"
+                                                       name="bodyType"
+                                                       value="json"
+                                                       t-att-checked="nodeConfig.config.bodyType !== 'form'"
+                                                       t-on-change="(ev) => this.updateBodyType('json')"/>
+                                                <span class="radio-custom"></span>
+                                                JSON Raw
+                                            </label>
+                                            <label class="radio-label">
+                                                <input type="radio"
+                                                       name="bodyType"
+                                                       value="form"
+                                                       t-att-checked="nodeConfig.config.bodyType === 'form'"
+                                                       t-on-change="(ev) => this.updateBodyType('form')"/>
+                                                <span class="radio-custom"></span>
+                                                Form Data
+                                            </label>
+                                        </div>
+                                        <div class="help-text">Choose between raw JSON or form-based data
+                                            structure
+                                        </div>
+                                    </div>
+
+                                    <!-- JSON Structure -->
+                                    <t t-if="nodeConfig.config.bodyType !== 'form'">
+                                        <div class="config-section">
+                                            <div class="section-title">
+                                                <span class="section-icon">📄</span>
+                                                JSON Payload
+                                            </div>
+                                            <div class="help-text">Enter the JSON payload for POST/PUT requests. Use
+                                                double quotes for keys and string values.
+                                            </div>
+                                            <div class="template-buttons">
+                                                <button class="template-btn"
+                                                        t-on-click="() => this.applyBodyTemplate('object')">
+                                                    { "key": "value" }
+                                                </button>
+                                                <button class="template-btn"
+                                                        t-on-click="() => this.applyBodyTemplate('array')">
+                                                    [ { "item": 1 } ]
+                                                </button>
+                                                <button class="template-btn"
+                                                        t-on-click="() => this.formManager.convertFormToJson()">
+                                                    🔄 From Form
+                                                </button>
+                                            </div>
+                                            <label class="config-label">JSON Payload</label>
+                                            <textarea class="config-textarea json-payload"
+                                                      placeholder='{"key": "value"}'
+                                                      t-att-value="nodeConfig.config.body || ''"
+                                                      t-on-input="(ev) => this.updateNodeConfig('body', ev.target.value)"></textarea>
+                                        </div>
+                                    </t>
+
+                                    <!-- Form Structure -->
+                                    <t t-if="nodeConfig.config.bodyType === 'form'">
+                                        <div class="config-section">
+                                            <div class="section-title">
+                                                <span class="section-icon">📋</span>
+                                                Form Data Structure
+                                            </div>
+                                            <div class="help-text">Add key-value pairs for your request body. These
+                                                will be converted to JSON format.
+                                            </div>
+
+                                            <!-- Add Field Button at TOP -->
+                                            <div class="form-header-actions">
+                                                <t t-if="formManager.hasFormFields(state.selectedNode)">
+                                                    <button class="clear-all-fields-btn"
+                                                            t-on-click="formManager.clearAllFormFields">
+                                                        🗑️ Clear All
+                                                    </button>
+                                                </t>
+                                            </div>
+
+                                            <!-- Form Fields List -->
+                                            <div class="form-fields-container">
+                                                <t t-if="!formManager.hasFormFields(state.selectedNode)">
+                                                    <div class="no-fields-message">
+                                                        <div class="no-fields-icon">📝</div>
+                                                        <h4>No Form Fields Added</h4>
+                                                        <p>Click "Add New Field" above to start building your form
+                                                            data structure
+                                                        </p>
+                                                    </div>
+                                                </t>
+
+                                                <t t-foreach="nodeConfig.config.formFields" t-as="field"
+                                                   t-key="field_index">
+                                                    <div class="form-field-row">
+                                                        <div class="form-field-inputs">
+                                                            <div class="input-group">
+                                                                <label class="input-label">Field Name (Key)</label>
+                                                                <input type="text"
+                                                                       class="config-input form-field-key"
+                                                                       placeholder="Enter field name (e.g., username, email, age)"
+                                                                       t-att-value="field.key"
+                                                                       t-on-input="(ev) => formManager.updateFormField(field_index, 'key', ev.target.value)"/>
+                                                            </div>
+                                                            <div class="input-group">
+                                                                <label class="input-label">Field Value</label>
+                                                                <input type="text"
+                                                                       class="config-input form-field-value"
+                                                                       placeholder="Enter field value (e.g., john_doe, user@example.com, 25)"
+                                                                       t-att-value="field.value"
+                                                                       t-on-input="(ev) => formManager.updateFormField(field_index, 'value', ev.target.value)"/>
+                                                            </div>
+                                                            <div class="form-field-header">
+                                                                <button class="remove-form-field-btn"
+                                                                        t-on-click="() => formManager.removeFormField(field_index)"
+                                                                        title="Remove this field">
+                                                                    🗑️ Remove
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </t>
+                                            </div>
+
+                                            <!-- Bottom Actions -->
+                                            <t t-if="formManager.hasFormFields(state.selectedNode)">
+                                                <div class="form-footer-actions">
+                                                    <button class="add-form-field-btn"
+                                                            t-on-click="formManager.addFormField">
+                                                        ➕ Add Another Field
+                                                    </button>
+                                                    <button class="convert-to-json-btn"
+                                                            t-on-click="formManager.convertFormToJson">
+                                                        🔄 Convert to JSON
+                                                    </button>
+                                                </div>
+
+                                                <!-- JSON Preview -->
+                                                <div class="config-section">
+                                                    <div class="section-title">
+                                                        <span class="section-icon">👁️</span>
+                                                        JSON Preview
+                                                    </div>
+                                                    <label class="config-label">Generated JSON</label>
+                                                    <div class="json-preview">
+                                                        <t t-esc="formManager.generateJsonFromForm(nodeConfig.config.formFields)"/>
+                                                    </div>
+                                                </div>
+                                            </t>
+                                        </div>
+                                    </t>
+                                </div>
+                            </t>
+                            <!-- Test Button and Response Area -->
+                            <button class="test-button" t-on-click="() => this.runApiTest(state.selectedNode)">
+                                ⚡ Run API Test
+                            </button>
+                            <label class="config-label" style="margin-top: 15px;">API Response</label>
+                            <div class="response-area" t-att-id="'response-area-' + state.selectedNode">
+                                No test run yet.
+                            </div>
+                        </t>
+
+                        <!-- Authentication Node Config -->
+                        <t t-if="nodeConfig.type === 'auth'">
+                            <div class="config-section">
+                                <div class="section-title">
+                                    <span class="section-icon">🔐</span>
+                                    Authentication Configuration
+                                </div>
+                                <label class="config-label">Auth Type</label>
+                                <select class="config-select"
+                                        t-att-value="nodeConfig.config.authType || 'none'"
+                                        t-on-change="(ev) => this.updateAuthType(state.selectedNode,
+                                         ev.target.value)">
+                                    <option value="none">None</option>
+                                    <option value="basic">Basic Auth</option>
+                                    <option value="bearer">Bearer Token</option>
+                                    <option value="api-key">API Key</option>
+                                </select>
+
+                                <!-- Dynamic Auth Fields -->
+                                <t t-if="nodeConfig.config.authType === 'basic'">
+                                    <label class="config-label">Username / API Key</label>
+                                    <input type="text"
+                                           class="config-input"
+                                           placeholder="user"
+                                           t-att-value="nodeConfig.config.username || ''"
+                                           t-on-input="(ev) => this.updateNodeConfig('username', ev.target.value)"/>
+
+                                    <label class="config-label">Password / Secret Key</label>
+                                    <input type="password"
+                                           class="config-input"
+                                           placeholder="password"
+                                           t-att-value="nodeConfig.config.password || ''"
+                                           t-on-input="(ev) => this.updateNodeConfig('password', ev.target.value)"/>
+                                </t>
+
+                                <t t-if="nodeConfig.config.authType === 'bearer'">
+                                    <label class="config-label">Bearer Token</label>
+                                    <input type="text"
+                                           class="config-input"
+                                           placeholder="eyJhbGciOiJIUzI1Ni..."
+                                           t-att-value="nodeConfig.config.token || ''"
+                                           t-on-input="(ev) => this.updateNodeConfig('token', ev.target.value)"/>
+                                </t>
+
+                                <t t-if="nodeConfig.config.authType === 'api-key'">
+                                    <label class="config-label">API Key</label>
+                                    <input type="text"
+                                           class="config-input"
+                                           placeholder="YourSecretKey"
+                                           t-att-value="nodeConfig.config.apiKey || ''"
+                                           t-on-input="(ev) => this.updateNodeConfig('apiKey', ev.target.value)"/>
+
+                                    <label class="config-label">Key Location</label>
+                                    <select class="config-select"
+                                            t-att-value="nodeConfig.config.keyLocation || 'header'"
+                                            t-on-change="(ev) => this.updateNodeConfig('keyLocation','authType',
+                                             ev.target.value)">
+                                        <option value="header">Header</option>
+                                        <option value="query">Query Parameter</option>
+                                    </select>
+                                </t>
+
+                                <t t-if="nodeConfig.config.authType === 'none'">
+                                    <div style="font-size: 0.8rem; opacity: 0.8; padding: 10px; text-align: center;">
+                                        No authentication is required.
+                                    </div>
+                                </t>
+
+                                <div class="help-text">Configure the security parameters for the API.</div>
+                            </div>
+                        </t>
+
+                        <!-- Query Parameters Node Config -->
+                        <t t-if="nodeConfig.type === 'params'">
+                            <div class="config-section">
+                                <div class="section-title">
+                                    <span class="section-icon">❓</span>
+                                    Query Parameters
+                                </div>
+                                <div class="help-text">Add query parameters (e.g., `?userId=1`). Key and Value are
+                                    added to the URL.
+                                </div>
+
+                                <!-- Parameters List -->
+                                <div class="param-builder">
+                                    <t t-foreach="nodeConfig.config.params || []" t-as="param" t-key="param_index">
+                                        <div class="param-item">
+                                            <span t-esc="param.key + ': ' + param.value"/>
+                                            <span class="remove-btn"
+                                                  t-on-click="() => this.removeParam(state.selectedNode, 'params', param_index)">
+                                                ×
+                                            </span>
+                                        </div>
+                                    </t>
+                                </div>
+
+                                <label class="config-label">Parameter Key</label>
+                                <input type="text"
+                                       class="config-input"
+                                       placeholder="key_name"
+                                       t-att-id="'param-key-' + state.selectedNode"/>
+
+                                <label class="config-label">Parameter Value</label>
+                                <input type="text"
+                                       class="config-input"
+                                       placeholder="value_content"
+                                       t-att-id="'param-value-' + state.selectedNode"/>
+
+                                <button class="add-btn"
+                                        t-on-click="() => this.addParamFromInputs(state.selectedNode, 'params')">
+                                    + Add Parameter
+                                </button>
+                            </div>
+                        </t>
+
+                        <!-- Headers Node Config -->
+                        <t t-if="nodeConfig.type === 'headers'">
+                            <div class="config-section">
+                                <div class="section-title">
+                                    <span class="section-icon">📋</span>
+                                    Custom Headers
+                                </div>
+                                <div class="help-text">Add custom HTTP headers (e.g., `Content-Type:
+                                    application/json`).
+                                </div>
+
+                                <!-- Headers List -->
+                                <div class="param-builder">
+                                    <t t-foreach="nodeConfig.config.headers || []" t-as="header"
+                                       t-key="header_index">
+                                        <div class="param-item">
+                                            <span t-esc="header.key + ': ' + header.value"/>
+                                            <span class="remove-btn"
+                                                  t-on-click="() => this.removeParam(state.selectedNode, 'headers', header_index)">
+                                                ×
+                                            </span>
+                                        </div>
+                                    </t>
+                                </div>
+
+                                <label class="config-label">Header Key</label>
+                                <input type="text"
+                                       class="config-input"
+                                       placeholder="Content-Type"
+                                       t-att-id="'header-key-' + state.selectedNode"/>
+
+                                <label class="config-label">Header Value</label>
+                                <input type="text"
+                                       class="config-input"
+                                       placeholder="application/json"
+                                       t-att-id="'header-value-' + state.selectedNode"/>
+
+                                <button class="add-btn"
+                                        t-on-click="() => this.addParamFromInputs(state.selectedNode, 'headers')">
+                                    + Add Header
+                                </button>
+                            </div>
+                        </t>
+
+                        <!-- Request Body Node Config -->
+                        <t t-if="nodeConfig.type === 'body'">
+                            <div class="config-section">
+                                <div class="section-title">
+                                    <span class="section-icon">📝</span>
+                                    Request Body (JSON)
+                                </div>
+                                <div class="help-text">Enter the JSON payload for POST/PUT requests. Use double
+                                    quotes for keys and string values.
+                                </div>
+                                <div class="template-buttons">
+                                    <button class="template-btn"
+                                            t-on-click="() => this.applyBodyTemplate(state.selectedNode, 'object')">
+                                        { "key": "value" }
+                                    </button>
+                                    <button class="template-btn"
+                                            t-on-click="() => this.applyBodyTemplate(state.selectedNode, 'array')">[
+                                        { "item": 1 } ]
+                                    </button>
+                                </div>
+                                <label class="config-label">JSON Payload</label>
+                                <textarea class="config-textarea"
+                                          placeholder='{"key": "value"}'
+                                          t-att-value="nodeConfig.config.body || ''"
+                                          t-on-input="(ev) => this.updateNodeConfig('body', ev.target.value)"></textarea>
+                            </div>
+                        </t>
+                    </t>
+                </t>
+                <t t-else="">
+                    <div class="empty-config">
+                        <div class="empty-config-icon">🎯</div>
+                        <h3>Select a Node</h3>
+                        <p>Click on any node in your workflow to configure its settings and parameters here.</p>
+                    </div>
+                </t>
+            </div>
+        </div>
+    </t>
+
+</odoo>

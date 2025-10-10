@@ -57,8 +57,8 @@ export class NodeTemplates {
             endpoint: { baseUrl: '', authType: 'none' },
             auth: { authType: 'none' },
             get: { url: '', timeout: 10000 },
-            post: { url: '', timeout: 10000, body: '' },
-            put: { url: '', timeout: 10000, body: '' },
+             post: { url: '', timeout: 10000, body: '' , bodyType: 'json', formFields: [] },
+            put: { url: '', timeout: 10000, body: '', bodyType: 'json', formFields: []  },
             delete: { url: '', timeout: 10000 },
             params: { params: [] },
             headers: { headers: [] },
@@ -241,12 +241,12 @@ export class NodeTemplates {
         console.log('👤 Basic Auth Fields - Username:', username, 'Password:', password ? '***' : 'empty');
 
         return `
-            <label for="username-${nodeId}" class="config-label">Username</label>
+            <label for="username-${nodeId}" class="config-label">Username / API Key</label>
             <input type="text" id="username-${nodeId}" class="config-input"
                    data-config-key="username"
                    value="${this.escapeHtml(username)}">
 
-            <label for="password-${nodeId}" class="config-label">Password</label>
+            <label for="password-${nodeId}" class="config-label">Password / Secret Key</label>
             <input type="password" id="password-${nodeId}" class="config-input"
                    data-config-key="password"
                    value="${this.escapeHtml(password)}">
