@@ -1,12 +1,4 @@
 /** @odoo-module **/
-
-<<<<<<< HEAD
-export class NodeTemplates {
-    constructor(workflowBuilder) {
-        this.workflow = workflowBuilder;
-        this.state = workflowBuilder.state;
-        this.notification = workflowBuilder.notification;
-=======
 import { Component, useState, onMounted, useRef, onWillStart } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
@@ -88,7 +80,6 @@ class WorkflowBuilder extends Component {
 
     isValidWorkflowData(data) {
         return data && typeof data === 'object' && Array.isArray(data.nodes);
->>>>>>> a9db91d
     }
 
     getNodeTemplate(type) {
@@ -108,7 +99,6 @@ class WorkflowBuilder extends Component {
         return templates[type] || templates.start;
     }
 
-<<<<<<< HEAD
     getNodeIcon(type) {
         const icons = {
             start: '▶️',
@@ -135,7 +125,7 @@ class WorkflowBuilder extends Component {
             delete: 'DELETE Request'
         };
         return titles[type] || 'Node';
-=======
+    }
 
     setupConfigPanelEvents() {
         this.setupConfigEventHandlers();
@@ -182,7 +172,6 @@ class WorkflowBuilder extends Component {
 
         // Force reactivity update
         this.state.configUpdateCounter++;
->>>>>>> a9db91d
     }
 
     getDefaultConfig(type) {
@@ -212,10 +201,9 @@ class WorkflowBuilder extends Component {
         console.log('🎨 Generating config template for node:', nodeId);
         console.log('📊 Current config:', nodeConfig.config);
 
-<<<<<<< HEAD
         const type = nodeConfig.type;
         let html = '';
-=======
+
         // Update config panel events when node selection changes
         setTimeout(() => {
             this.setupConfigEventHandlers();
@@ -225,8 +213,6 @@ class WorkflowBuilder extends Component {
                 this.state.configUpdateCounter++;
         }
         }, 100);
-    }
->>>>>>> a9db91d
 
         switch (type) {
             case 'start':
@@ -261,7 +247,6 @@ class WorkflowBuilder extends Component {
         return html;
     }
 
-<<<<<<< HEAD
     getStartConfiguration(nodeId) {
         return `
             <div class="config-section">
@@ -564,9 +549,9 @@ class WorkflowBuilder extends Component {
 
         console.log('✅ Added param:', { nodeId, paramType, key, value });
 
-        this.workflow.nodeManager.updateNodeStatus(nodeId);
+        this.nodeManager.updateNodeStatus(nodeId);
         this.workflow.state.configUpdateCounter++;
-=======
+    }
     // Add the missing methods that are called from templates
    updateAuthType(nodeId, authType) {
         const nodeConfig = this.state.nodeConfigs[nodeId];
@@ -598,7 +583,6 @@ class WorkflowBuilder extends Component {
         this.state.configUpdateCounter++;
 
         console.log('✅ Auth type updated successfully');
->>>>>>> a9db91d
     }
 
     removeParam(nodeId, paramType, index) {
@@ -606,7 +590,7 @@ class WorkflowBuilder extends Component {
         if (nodeConfig.config[paramType] && nodeConfig.config[paramType].length > index) {
             nodeConfig.config[paramType].splice(index, 1);
             console.log('🗑️ Removed param:', { nodeId, paramType, index });
-            this.workflow.nodeManager.updateNodeStatus(nodeId);
+            this.nodeManager.updateNodeStatus(nodeId);
             this.workflow.state.configUpdateCounter++;
         } else {
             console.error('❌ Cannot remove param - index out of bounds:', { nodeId, paramType, index });
@@ -627,24 +611,24 @@ class WorkflowBuilder extends Component {
         }
     }
 
-    updateAuthType(nodeId, authType) {
-        console.log('🔄 Updating auth type to:', authType);
-
-        this.workflow.updateNodeConfig(nodeId, 'authType', authType);
-
-        const nodeConfig = this.state.nodeConfigs[nodeId];
-        if (nodeConfig) {
-            const fieldsToClear = ['username', 'password', 'token', 'apiKey', 'keyLocation'];
-            fieldsToClear.forEach(field => {
-                if (nodeConfig.config[field]) {
-                    delete nodeConfig.config[field];
-                }
-            });
-        }
-
-        // Force template update to show/hide auth fields
-        this.workflow.state.configUpdateCounter++;
-    }
+//    updateAuthType(nodeId, authType) {
+//        console.log('🔄 Updating auth type to:', authType);
+//
+//        this.workflow.updateNodeConfig(nodeId, 'authType', authType);
+//
+//        const nodeConfig = this.state.nodeConfigs[nodeId];
+//        if (nodeConfig) {
+//            const fieldsToClear = ['username', 'password', 'token', 'apiKey', 'keyLocation'];
+//            fieldsToClear.forEach(field => {
+//                if (nodeConfig.config[field]) {
+//                    delete nodeConfig.config[field];
+//                }
+//            });
+//        }
+//
+//        // Force template update to show/hide auth fields
+//        this.workflow.state.configUpdateCounter++;
+//    }
 
     applyBodyTemplate(nodeId, type) {
         const textarea = document.getElementById(`request-body-${nodeId}`);
@@ -698,8 +682,7 @@ class WorkflowBuilder extends Component {
         const nodeConfig = this.state.nodeConfigs[nodeId];
         return nodeConfig && nodeConfig.config.params ? nodeConfig.config.params : [];
     }
-<<<<<<< HEAD
-=======
+
 
     get selectedNodeConfig() {
         return this.state.selectedNode ? this.state.nodeConfigs[this.state.selectedNode] : null;
@@ -954,7 +937,8 @@ class WorkflowBuilder extends Component {
     saveWorkflow() { return this.workflowIO.saveWorkflow(); }
     importWorkflow(event) { return this.workflowIO.importWorkflow(event); }
     getConfigurationTemplate(nodeId) { return this.nodeTemplates.getConfigurationTemplate(nodeId); }
->>>>>>> a9db91d
 }
 
+WorkflowBuilder.template = "api_workflow_builder.WorkflowBuilder";
 registry.category("actions").add("workflow_builder", WorkflowBuilder);
+export default WorkflowBuilder;
